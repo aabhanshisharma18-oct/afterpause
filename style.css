@@ -1,7 +1,7 @@
 /* Shared colours from our approved homepage design. */
 :root {
   --ivory: #faf9f6;
-  --plum: #6b4d68;
+  --plum: #765273;
   --lavender: #eee8ef;
   --text: #242824;
   --muted: #5f5a60;
@@ -42,27 +42,29 @@ a:focus-visible, button:focus-visible, summary:focus-visible {
   align-items: center;
   justify-content: space-between;
   gap: 24px;
-  padding-block: 20px;
+  padding-block: 23px;
 }
 .logo {
-  font-family: Georgia, 'Times New Roman', serif;
-  font-size: 36px;
+  font-family: 'Times New Roman', Times, serif;
+  font-size: 43px;
   font-weight: bold;
   letter-spacing: -1.5px;
   text-decoration: none;
+  line-height: 1.1;
 }
-nav { display: flex; gap: 30px; }
-nav a { font-size: 15px; text-decoration: none; }
+nav { display: flex; align-items: center; gap: 36px; }
+nav a { font-size: 17px; text-decoration: none; }
+.nav-sign-in { padding: 0; border: 0; background: none; font: inherit; font-size: 17px; cursor: pointer; color: var(--text); }
+nav .nav-share { padding: 11px 22px; font-size: 18px; }
 nav a:hover { color: var(--plum); text-decoration: underline; }
 
 /* The ivory overlay fades the photo without fading text or project images. */
 .hero {
-  padding-block: 65px 75px;
+  padding-block: 55px 90px;
   background-color: #f3ebe2;
   background-image:
-    radial-gradient(ellipse at 24% 35%, rgba(250, 249, 246, .78), transparent 66%),
-    linear-gradient(rgba(250, 249, 246, .32), rgba(250, 249, 246, .32)),
-    url('images/creative-workspace.png');
+    radial-gradient(ellipse at 23% 38%, rgba(250, 249, 246, .42), transparent 65%),
+    url('images/hero-workspace-reference.png');
   background-size: cover;
   background-position: center bottom;
   border-bottom: 1px solid var(--border);
@@ -70,9 +72,11 @@ nav a:hover { color: var(--plum); text-decoration: underline; }
 .hero-content {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  align-items: center;
-  gap: 48px;
+  align-items: start;
+  gap: 36px;
 }
+.hero-copy { padding-top: 20px; }
+.hero-copy .eyebrow { font-size: 13px; letter-spacing: 2px; }
 .eyebrow {
   margin: 0;
   font-size: 11px;
@@ -85,19 +89,24 @@ h1, h2, h3 {
   line-height: 1.12;
 }
 h1 {
-  margin: 28px 0 25px;
-  font-size: clamp(36px, 3.8vw, 52px);
-  letter-spacing: -2px;
+  margin: 40px 0 30px;
+  font-family: 'Times New Roman', Times, serif;
+  font-size: clamp(42px, 5.15vw, 70px);
+  letter-spacing: -2.5px;
+  line-height: 1.08;
 }
-h1 span { color: var(--plum); }
+h1 span { color: var(--plum); font-size: .86em; }
 .intro {
-  max-width: 470px;
-  margin: 0 0 34px;
-  font-size: 21px;
-  line-height: 1.5;
+  max-width: 570px;
+  margin: 0 0 44px;
+  font-size: 24px;
+  line-height: 1.45;
 }
 .hero-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 24px; }
 .button {
+  border: 1px solid transparent;
+  font-family: inherit;
+  cursor: pointer;
   display: inline-flex;
   align-items: center;
   gap: 14px;
@@ -110,6 +119,8 @@ h1 span { color: var(--plum); }
 }
 .button:hover { background: #563d54; }
 .text-link { font-size: 15px; text-decoration-color: var(--plum); }
+.share-link { padding: 0; border: 0; background: none; color: var(--text); font: inherit; font-size: 21px; font-weight: 600; cursor: pointer; text-decoration: underline; text-underline-offset: 6px; text-decoration-color: var(--plum); }
+.hero-actions .button { font-size: 22px; padding: 12px 27px; }
 .featured-project { min-width: 0; scroll-margin-top: 24px; }
 .project-image {
   display: block;
@@ -130,8 +141,8 @@ h1 span { color: var(--plum); }
   margin-top: 22px;
 }
 .sample-label { color: var(--muted); font-size: 12px; }
-.featured-project h2 { margin: 8px 0 5px; font-size: 34px; letter-spacing: -.8px; }
-.project-description { margin: 0 0 14px; font-size: 17px; }
+.featured-project h2 { margin: 8px 0 5px; font-family: 'Times New Roman', Times, serif; font-size: 38px; letter-spacing: -.8px; }
+.project-description { margin: 0 0 14px; font-size: 20px; }
 .project-tag {
   display: inline-block;
   padding: 3px 10px;
@@ -139,8 +150,13 @@ h1 span { color: var(--plum); }
   border-radius: 4px;
   background: rgba(250, 249, 246, .8);
   color: var(--plum);
-  font-size: 14px;
+  font-size: 16px;
 }
+dialog { width: min(470px, 90%); padding: 36px; border: 1px solid var(--border); border-radius: 8px; background: var(--ivory); color: var(--text); }
+dialog::backdrop { background: rgba(30, 22, 30, .4); }
+dialog h2 { margin: 18px 0; }
+dialog .button { border: 0; font: inherit; cursor: pointer; }
+.dialog-close { float: right; padding: 0 5px; background: none; border: 0; font-size: 28px; cursor: pointer; color: var(--plum); }
 /* Gallery cards stay in the HTML; JavaScript only changes their visibility. */
 [hidden] { display: none !important; }
 .gallery { padding-block: 55px; scroll-margin-top: 24px; }
@@ -267,6 +283,9 @@ h3 { margin: 8px 0; font-size: 25px; }
 .site-footer p { flex: 1; font-family: Georgia, serif; font-style: italic; }
 
 @media (max-width: 850px) {
+  nav { gap: 18px; }
+  nav a, .nav-sign-in { font-size: 14px; }
+  nav .nav-share { font-size: 14px; padding: 8px 14px; }
   .continuation { grid-template-columns: 1fr; gap: 24px; padding: 30px; }
   .continuation-copy > p:not(.eyebrow) { max-width: 100%; }
   .project-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -278,6 +297,13 @@ h3 { margin: 8px 0; font-size: 25px; }
   .intro { max-width: 530px; }
 }
 @media (max-width: 600px) {
+  .site-header nav { flex-wrap: wrap; gap: 14px 20px; width: 100%; }
+  .site-header { justify-content: center; }
+  .site-header nav .nav-share { margin-left: auto; }
+  .hero-copy { padding-top: 0; }
+  .hero-copy .eyebrow { font-size: 10px; letter-spacing: 1px; }
+  .hero-actions .button { font-size: 17px; padding: 12px 18px; }
+  .share-link { font-size: 17px; }
   .continuation { padding: 24px 20px; margin-bottom: 38px; }
   .gallery { padding-block: 38px; }
   .section-heading h2 { font-size: 30px; }
@@ -289,8 +315,8 @@ h3 { margin: 8px 0; font-size: 25px; }
   nav { gap: 18px; }
   nav a { font-size: 13px; }
   .hero {
-    background-size: cover, cover, auto 100%;
-    background-position: center, center, 25% bottom;
+    background-size: cover, auto 100%;
+    background-position: center, 30% bottom;
   }
   h1 { font-size: clamp(34px, 8.5vw, 48px); letter-spacing: -1.3px; }
   .eyebrow { font-size: 10px; letter-spacing: 1.5px; }

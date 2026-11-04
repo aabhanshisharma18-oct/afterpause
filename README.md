@@ -14,7 +14,7 @@ No framework, package installation, or build command is needed.
 - An original/new-contribution switch with credit for both contributors.
 - Mobile layouts, keyboard controls, a skip link, and reduced-motion support.
 
-All projects are clearly labelled samples. The Campus Guide and Reading Room
+The gallery labels its projects as samples. The Campus Guide and Reading Room
 screens are generated concept images, not functioning apps. The before/after
 search field illustrates a proposed contribution; it does not search books.
 Login, project publishing, contribution requests, and database storage are the
@@ -62,3 +62,12 @@ is needed. The SVG favicon is a simple code-drawn site icon.
 
 Replace these sample project images with actual screenshots when real exhibits
 are available. Keep attribution and material permissions with future exhibits.
+
+## Reference-matched hero
+
+The hero uses two additional image assets reconstructed from the approved
+screenshot with the built-in image tool: `hero-workspace-reference.png` keeps
+the camera at top centre, notebook at bottom left, and laptop at lower right;
+`campus-guide-reference.png` follows the simpler reference map preview.
+The header and hero include sign-in and sharing buttons. They open a clear
+preview availability notice until accounts and submissions are implemented.

@@ -48,3 +48,12 @@ chapterButtons.forEach((button) => {
 // Without JavaScript, both examples stay visible.
 showChapter('original');
 chapterControls.hidden = false;
+
+// These actions explain preview availability until accounts are introduced.
+const accountDialog = document.querySelector('#account-dialog');
+document.querySelectorAll('[data-account]').forEach((button) => {
+  button.addEventListener('click', () => {
+    document.querySelector('#account-title').textContent = button.dataset.account;
+    accountDialog.showModal();
+  });
+});
