@@ -60,10 +60,11 @@ nav a:hover { color: var(--plum); text-decoration: underline; }
   padding-block: 65px 75px;
   background-color: #f3ebe2;
   background-image:
-    linear-gradient(100deg, rgba(250, 249, 246, .86), rgba(250, 249, 246, .57)),
+    radial-gradient(ellipse at 24% 35%, rgba(250, 249, 246, .78), transparent 66%),
+    linear-gradient(rgba(250, 249, 246, .32), rgba(250, 249, 246, .32)),
     url('images/creative-workspace.png');
   background-size: cover;
-  background-position: center;
+  background-position: center bottom;
   border-bottom: 1px solid var(--border);
 }
 .hero-content {
@@ -244,9 +245,10 @@ summary::marker { color: var(--plum); }
   padding-block: 60px;
   scroll-margin-top: 24px;
   border-top: 1px solid var(--border);
-  background-image: linear-gradient(100deg, var(--ivory) 40%, rgba(250, 249, 246, .9)), url('images/creative-workspace.png');
-  background-size: cover;
-  background-position: center bottom;
+  background-image: linear-gradient(100deg, var(--ivory) 46%, rgba(250, 249, 246, .45)), url('images/creative-workspace.png');
+  background-size: cover, 680px auto;
+  background-repeat: no-repeat;
+  background-position: center, right bottom;
 }
 h2 { margin: 0 0 35px; font-size: 34px; }
 h3 { margin: 8px 0; font-size: 25px; }
@@ -286,7 +288,10 @@ h3 { margin: 8px 0; font-size: 25px; }
   .logo { font-size: 30px; }
   nav { gap: 18px; }
   nav a { font-size: 13px; }
-  .hero { background-position: 35% center; }
+  .hero {
+    background-size: cover, cover, auto 100%;
+    background-position: center, center, 25% bottom;
+  }
   h1 { font-size: clamp(34px, 8.5vw, 48px); letter-spacing: -1.3px; }
   .eyebrow { font-size: 10px; letter-spacing: 1.5px; }
   .intro { font-size: 18px; }
