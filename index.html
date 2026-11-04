@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Afterpause — Unfinished ideas, new chapters</title>
+  <meta name="description" content="A place for unfinished projects and the people who see what they could become.">
+  <meta name="theme-color" content="#6b4d68">
+  <link rel="icon" href="images/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="style.css">
+  <script src="script.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#main-content">Skip to content</a>
+  <header class="site-header">
+    <a class="logo" href="index.html">afterpause.</a>
+    <nav aria-label="Main navigation">
+      <a href="#projects">Explore</a>
+      <a href="#how-it-works">How it works</a>
+    </nav>
+  </header>
+
+  <main id="main-content" tabindex="-1">
+    <section class="hero" aria-labelledby="hero-title">
+      <div class="hero-content">
+        <div class="hero-copy">
+          <p class="eyebrow">Good ideas deserve another chapter</p>
+          <h1 id="hero-title">Not finished.<br><span>Still worth something.</span></h1>
+          <p class="intro">A place for unfinished projects and the people who see what they could become.</p>
+          <div class="hero-actions">
+            <a class="button" href="#projects">Explore projects <span aria-hidden="true">↗</span></a>
+            <a class="text-link" href="#how-it-works">How it works</a>
+          </div>
+        </div>
+
+        <article class="featured-project" id="featured-project" aria-labelledby="project-title">
+          <img class="project-image" src="images/campus-guide.png" width="1536" height="1024"
+            alt="Campus Guide concept showing a campus map, a blue walking route, location search, and a university building preview."
+            fetchpriority="high">
+          <div class="project-heading">
+            <p class="eyebrow">Featured project</p>
+            <span class="sample-label">Sample concept</span>
+          </div>
+          <h2 id="project-title">Campus Guide</h2>
+          <p class="project-description">A better way to find your way around campus.</p>
+          <span class="project-tag">Looking for a frontend developer</span>
+        </article>
+      </div>
+    </section>
+
+    <section class="gallery" id="projects" aria-labelledby="gallery-title">
+      <div class="section-heading">
+        <h2 id="gallery-title">Pick up where someone left off.</h2>
+        <p>Find a small next step worth taking.</p>
+      </div>
+      <div class="project-filters" role="group" aria-label="Filter projects by category" hidden>
+        <button type="button" data-filter="all" aria-pressed="true">All projects</button>
+        <button type="button" data-filter="design" aria-pressed="false">Design</button>
+        <button type="button" data-filter="development" aria-pressed="false">Development</button>
+        <button type="button" data-filter="games" aria-pressed="false">Games</button>
+        <button type="button" data-filter="tools" aria-pressed="false">Useful tools</button>
+      </div>
+      <div class="gallery-caption">
+        <p class="eyebrow">Sample projects</p>
+        <p class="result-count" role="status" aria-live="polite" aria-atomic="true">3 projects</p>
+      </div>
+      <div class="project-grid">
+        <article class="project-card" data-category="development tools">
+          <img src="images/campus-guide.png" width="1536" height="1024" loading="lazy"
+            alt="Campus Guide sample interface with a campus map and walking route.">
+          <span class="category-label">Useful tools</span>
+          <h3>Campus Guide</h3>
+          <p>Help finish the mobile navigation.</p>
+          <details>
+            <summary>View project <span aria-hidden="true">↗</span></summary>
+            <div class="project-story">
+              <p>A campus map concept that helps students find classrooms, libraries, and places to eat.</p>
+              <p><strong>What exists:</strong> a desktop interface concept.</p>
+              <p><strong>Next step:</strong> design and build navigation that works on small screens.</p>
+              <p><strong>Skills:</strong> HTML, CSS, JavaScript.</p>
+              <p class="demo-note">Illustrative sample. This is not a live contribution listing.</p>
+            </div>
+          </details>
+        </article>
+        <article class="project-card" data-category="design">
+          <img src="images/reading-room.png" width="1536" height="1024" loading="lazy"
+            alt="Reading Room sample book tracker with book covers, reading lists, and progress bars.">
+          <span class="category-label category-peach">Design</span>
+          <h3>Reading Room</h3>
+          <p>Add search to a growing book collection.</p>
+          <details>
+            <summary>View project <span aria-hidden="true">↗</span></summary>
+            <div class="project-story">
+              <p>A quiet personal library concept for keeping track of books and reading progress.</p>
+              <p><strong>What exists:</strong> reading-list and bookshelf screen concepts.</p>
+              <p><strong>Next step:</strong> design a book search screen, including its empty and no-results states.</p>
+              <p><strong>Skills:</strong> interface design, HTML, CSS.</p>
+              <p class="demo-note">Illustrative sample. This is not a live contribution listing.</p>
+            </div>
+          </details>
+        </article>
+        <article class="project-card" data-category="games">
+          <img src="images/one-more-level.png" width="1536" height="1024" loading="lazy"
+            alt="Sample pixel game with a small adventurer, mountain scenery, coins, and stone platforms.">
+          <span class="category-label">Games</span>
+          <h3>One More Level</h3>
+          <p>Build the last level of a small adventure.</p>
+          <details>
+            <summary>View project <span aria-hidden="true">↗</span></summary>
+            <div class="project-story">
+              <p>A pixel platformer concept about exploring a forgotten mountain garden.</p>
+              <p><strong>What exists:</strong> an environment and gameplay visual concept.</p>
+              <p><strong>Next step:</strong> plan the final level with a clear start, a simple puzzle, and an ending.</p>
+              <p><strong>Skills:</strong> level design, pixel art.</p>
+              <p class="demo-note">Illustrative sample. This is not a live contribution listing.</p>
+            </div>
+          </details>
+        </article>
+      </div>
+    </section>
+
+    <section class="continuation" aria-labelledby="continuation-title">
+      <div class="continuation-copy">
+        <p class="eyebrow">The next chapter</p>
+        <h2 id="continuation-title">A small contribution.<br>A new chapter.</h2>
+        <p>See how an unfinished idea can grow when someone adds a useful next step.</p>
+        <p class="sample-label">Illustrative example · Reading Room</p>
+      </div>
+      <div class="comparison">
+        <div class="comparison-controls" role="group" aria-label="Choose a project chapter" hidden>
+          <button type="button" data-chapter="original" aria-pressed="true" aria-controls="chapter-original">Original idea</button>
+          <button type="button" data-chapter="contribution" aria-pressed="false" aria-controls="chapter-contribution">New contribution</button>
+        </div>
+        <figure class="chapter" id="chapter-original">
+          <div class="chapter-preview">
+            <img src="images/reading-room.png" width="1536" height="1024" loading="lazy"
+              alt="Original Reading Room concept with a bookshelf and reading progress, before adding search.">
+          </div>
+          <figcaption>
+            <strong>01 — Original idea</strong>
+            <span>A personal bookshelf, waiting for a way to find books.</span>
+            <span class="chapter-credit">Credit: original creator</span>
+          </figcaption>
+        </figure>
+        <figure class="chapter" id="chapter-contribution">
+          <div class="chapter-preview">
+            <div class="sample-search" aria-label="Illustration of the proposed book search field">
+              <span aria-hidden="true">⌕</span> Search books by title or author…
+              <span class="new-feature">Added search</span>
+            </div>
+            <img src="images/reading-room.png" width="1536" height="1024" loading="lazy"
+              alt="Reading Room bookshelf concept, shown beneath the proposed search feature.">
+          </div>
+          <figcaption>
+            <strong>02 — New contribution</strong>
+            <span>A proposed search field makes the next step visible.</span>
+            <span class="chapter-credit">Credit: original creator + new contributor</span>
+          </figcaption>
+        </figure>
+        <p class="comparison-note">Both creators stay credited. This sample illustrates a continuation; the search preview is not a working book search.</p>
+      </div>
+    </section>
+
+    <section class="how-it-works" id="how-it-works" aria-labelledby="steps-title">
+      <h2 id="steps-title">Every idea can have a next chapter.</h2>
+      <div class="steps">
+        <article>
+          <p class="step-number">01</p>
+          <h3>Find a project</h3>
+          <p>Explore unfinished ideas across design, development, games, and more.</p>
+        </article>
+        <article>
+          <p class="step-number">02</p>
+          <h3>Suggest a next step</h3>
+          <p>Share your plan and ask the original creator for permission to continue.</p>
+        </article>
+        <article>
+          <p class="step-number">03</p>
+          <h3>Continue with credit</h3>
+          <p>Build on the original work, keeping both creators credited.</p>
+        </article>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <a class="logo" href="index.html">afterpause.</a>
+    <p>Someone paused. Someone else begins.</p>
+    <a href="https://github.com/aabhanshisharma18-oct/afterpause">GitHub</a>
+  </footer>
+</body>
+</html>
