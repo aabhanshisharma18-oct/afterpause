@@ -10,8 +10,9 @@ bp = Blueprint("museum", __name__)
 
 @bp.get("/")
 def entrance():
-    featured = db.session.scalar(visible_exhibits().order_by(Exhibit.is_demo.asc(), Exhibit.id.asc()).limit(1))
-    return render_template("entrance.html", featured=featured)
+    projects = db.session.scalars(visible_exhibits().options(selectinload(Exhibit.media))
+                                  .order_by(Exhibit.is_demo.asc(), Exhibit.id.asc()).limit(3)).all()
+    return render_template("entrance.html", projects=projects)
 
 
 @bp.get("/explore")

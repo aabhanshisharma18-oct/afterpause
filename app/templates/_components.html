@@ -3,6 +3,17 @@
   {% if dedup %}<input type="hidden" name="action_token" value="{{ action_token() }}">{% endif %}
 {%- endmacro %}
 
+{% macro share_project(label, classes) -%}
+  {% if g.user %}
+    <form method="post" action="{{ url_for('exhibits.create') }}">
+      {{ security() }}
+      <button class="{{ classes }}">{{ label }}</button>
+    </form>
+  {% else %}
+    <a class="{{ classes }}" href="{{ url_for('auth.login') }}">{{ label }}</a>
+  {% endif %}
+{%- endmacro %}
+
 {% macro field(name, label, existing='', limit=100, type='text', required=true, help='', choices=none, error=none, autocomplete=none) -%}
   {% set entered = request.form.get(name, '') if request.method == 'POST' else existing %}
   {% set invalid = error and error.field == name %}

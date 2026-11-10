@@ -1,6 +1,6 @@
 # D2 Museum exploration and presentation
 
-D2 owns the public entrance, collection query, shared design and exhibit presentation. The dark entrance opens into warm ivory reading pages. The primary actions are Enter the museum and Exhibit a project.
+D2 owns the public entrance, collection query, shared design and exhibit presentation. The homepage restores the original plum and ivory palette, workspace image, and featured project layout. Its primary actions are Explore projects and Share your project.
 
 `/explore` supports `room`, `q`, `category`, `skill`, `state` and `page` parameters. Room tabs retain current search filters. Search matches titles, intentions, stories and tags, treating SQL wildcards as literal input. Skill filtering matches the creator’s skill list. The database paginates the collection at nine exhibits per page.
 

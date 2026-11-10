@@ -1,3 +1,4 @@
+{% from "_components.html" import share_project with context %}
 <!doctype html>
 <html lang="en">
 <head>
@@ -15,7 +16,8 @@
     <div class="shell nav-shell">
       <a class="wordmark" href="{{ url_for('museum.entrance') }}">afterpause<span>.</span></a>
       <nav aria-label="Main navigation">
-        <a href="{{ url_for('museum.explore') }}"{% if request.endpoint == 'museum.explore' %} aria-current="page"{% endif %}>Explore</a>
+        <a href="{{ '#projects' if request.endpoint == 'museum.entrance' else url_for('museum.explore') }}"{% if request.endpoint == 'museum.explore' %} aria-current="page"{% endif %}>Explore</a>
+        {% if request.endpoint == 'museum.entrance' %}<a href="#how-it-works">How it works</a>{% endif %}
         {% if g.user %}
           <a href="{{ url_for('exhibits.dashboard') }}"{% if request.endpoint == 'exhibits.dashboard' %} aria-current="page"{% endif %}>Dashboard</a>
           <a href="{{ url_for('auth.profile') }}">Profile</a>
@@ -26,7 +28,12 @@
           </form>
         {% else %}
           <a href="{{ url_for('auth.login') }}">Sign in</a>
-          <a class="button nav-action" href="{{ url_for('auth.register') }}">Join the museum</a>
+          {% if request.endpoint != 'museum.entrance' %}
+            <a class="button nav-action" href="{{ url_for('auth.register') }}">Join the museum</a>
+          {% endif %}
+        {% endif %}
+        {% if request.endpoint == 'museum.entrance' %}
+          {{ share_project('Share a project', 'button nav-action') }}
         {% endif %}
       </nav>
     </div>
