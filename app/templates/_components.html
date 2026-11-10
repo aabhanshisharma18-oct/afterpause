@@ -1,0 +1,71 @@
+{% macro security(dedup=true) -%}
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  {% if dedup %}<input type="hidden" name="action_token" value="{{ action_token() }}">{% endif %}
+{%- endmacro %}
+
+{% macro field(name, label, existing='', limit=100, type='text', required=true, help='', choices=none, error=none, autocomplete=none) -%}
+  {% set entered = request.form.get(name, '') if request.method == 'POST' else existing %}
+  {% set invalid = error and error.field == name %}
+  <div class="field">
+    <label for="{{ name }}">{{ label }}{% if not required %} <span>(optional)</span>{% endif %}</label>
+    {% if help %}<small id="{{ name }}-hint">{{ help }}</small>{% endif %}
+    {% set attrs %}id="{{ name }}" name="{{ name }}"{% if required %} required{% endif %}{% if invalid %} aria-invalid="true"{% endif %}{% if help or invalid %} aria-describedby="{% if help %}{{ name }}-hint{% endif %}{% if help and invalid %} {% endif %}{% if invalid %}{{ name }}-error{% endif %}"{% endif %}{% endset %}
+    {% if type == 'textarea' %}
+      <textarea {{ attrs|safe }} maxlength="{{ limit }}" rows="4">{{ entered or '' }}</textarea>
+    {% elif type == 'select' %}
+      <select {{ attrs|safe }}>
+        <option value="">{{ 'Choose an option' if required else 'None selected' }}</option>
+        {% for key, choice in choices.items() %}
+        <option value="{{ key }}"{% if entered == key %} selected{% endif %}>{{ choice }}</option>
+        {% endfor %}
+      </select>
+    {% elif type == 'file' %}
+      <input {{ attrs|safe }} type="file" accept="image/png,image/jpeg,image/webp">
+    {% else %}
+      <input {{ attrs|safe }} type="{{ type }}" maxlength="{{ limit }}"{% if type != 'password' %} value="{{ entered or '' }}"{% else %} minlength="8"{% endif %}{% if autocomplete %} autocomplete="{{ autocomplete }}"{% endif %}>
+    {% endif %}
+    {% if invalid %}<p class="field-error" id="{{ name }}-error" role="alert">{{ error }}</p>{% endif %}
+  </div>
+{%- endmacro %}
+
+{% macro picture(image, label='No image available', lazy=true) -%}
+  <div class="picture{% if not image %} is-empty{% endif %}">
+    {% if image %}<img src="{{ url_for('exhibits.media', storage_key=image.storage_key) }}" alt="{{ image.alt_text }}"{% if lazy %} loading="lazy"{% endif %} data-fallback>{% endif %}
+    <span class="picture-fallback"{% if image %} hidden{% endif %}>{{ label }}</span>
+  </div>
+{%- endmacro %}
+
+{% macro status(state) -%}
+  <span class="pill {{ state }}">{{ states.get(state, state.replace('-', ' ')|capitalize) }}</span>
+{%- endmacro %}
+
+{% macro exhibit_card(exhibit) -%}
+  <article class="card">
+    {{ picture(exhibit.media|first|default(none)) }}
+    <div class="card-body">
+      <div class="card-meta">
+        <span class="eyebrow">No. {{ '%03d'|format(exhibit.id) }}</span>
+        {{ status(exhibit.continuation_state) }}
+        {% if exhibit.is_demo %}<span class="pill demo">Demo</span>{% endif %}
+      </div>
+      <h2><a href="{{ url_for('museum.exhibit', slug=exhibit.slug) }}">{{ exhibit.title }}</a></h2>
+      <p>{{ exhibit.intention }}</p>
+      <p class="muted small">Original work by {{ exhibit.owner.display_name }}</p>
+      <p class="next-note"><strong>Next step</strong> {{ exhibit.next_step }}</p>
+    </div>
+  </article>
+{%- endmacro %}
+
+{% macro date(value) -%}
+  <time datetime="{{ value.isoformat() }}Z">{{ value.strftime('%d %b %Y') }}</time>
+{%- endmacro %}
+
+{% macro pages(page, href, name='Results') -%}
+  {% if page.pages > 1 %}
+    <nav class="pagination" aria-label="{{ name }} pages">
+      {% if page.has_prev %}<a href="{{ href(page.prev_num) }}">← Previous</a>{% endif %}
+      <span>Page {{ page.page }} of {{ page.pages }}</span>
+      {% if page.has_next %}<a href="{{ href(page.next_num) }}">Next →</a>{% endif %}
+    </nav>
+  {% endif %}
+{%- endmacro %}

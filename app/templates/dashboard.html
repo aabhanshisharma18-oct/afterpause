@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+{% from "_components.html" import picture, security, status, date with context %}
+{% set tabs = {'exhibits': 'My exhibits', 'requests': 'Creator requests', 'review': 'Updates awaiting review', 'my-requests': 'My requests', 'continuations': 'My continuations', 'saved': 'Saved exhibits'} %}
+{% macro decision(form_action, second_action, prompt, first, second, key) -%}
+  <form method="post" class="decision-form" action="{{ form_action }}">
+    {{ security() }}
+    <label for="note-{{ key }}">{{ prompt }} (optional)</label>
+    <textarea id="note-{{ key }}" name="note" rows="2" maxlength="400"></textarea>
+    <div class="actions"><button class="button">{{ first }}</button><button class="button secondary" formaction="{{ second_action }}">{{ second }}</button></div>
+  </form>
+{%- endmacro %}
+{% block title %}{{ tabs[tab] }} · Afterpause{% endblock %}
+{% block content %}
+<section class="shell section">
+  <p class="eyebrow">Your museum workshop</p>
+  <div class="split-heading">
+    <h1>Dashboard</h1>
+    <form method="post" action="{{ url_for('exhibits.create') }}">{{ security() }}<button class="button">Exhibit a project</button></form>
+  </div>
+  <nav class="tabs" aria-label="Dashboard sections">
+    {% for key, label in tabs.items() %}
+    <a href="{{ url_for('exhibits.dashboard', tab=key) }}"{% if key == tab %} aria-current="page"{% endif %}>{{ label }}</a>
+    {% endfor %}
+  </nav>
+  <h2>{{ tabs[tab] }}</h2>
+  {% if not entries %}
+    <div class="empty"><p>{{ {
+      'exhibits': 'You don’t have any exhibits yet. Start a private draft to begin.',
+      'requests': 'New proposals will appear here.',
+      'review': 'There are no updates waiting for approval.',
+      'my-requests': 'Proposals you send will appear here.',
+      'continuations': 'Accepted continuations will appear here.',
+      'saved': 'Exhibits you save while browsing will appear here.'
+    }[tab] }}</p><a href="{{ url_for('museum.explore') }}">Explore the rooms</a></div>
+  {% endif %}
+  <div class="entry-list">
+  {% for item in entries %}
+  <article class="entry">
+    {% if tab in ('exhibits', 'saved') %}
+      <div class="card-meta">
+        <span class="eyebrow">Exhibit {{ '%03d'|format(item.id) }}</span>
+        {{ status(item.continuation_state if tab == 'saved' else item.publication_state) }}
+        {% if item.moderation_hidden %}{{ status('restricted') }}{% endif %}
+      </div>
+      <h3>{{ item.label }}</h3><p>{{ item.intention }}</p>
+      <div class="actions">
+        {% if tab == 'exhibits' %}
+          <a class="button" href="{{ url_for('exhibits.edit', exhibit_id=item.id) }}">{{ 'Reopen draft' if item.publication_state == 'draft' else 'Edit exhibit' }}</a>
+          <a href="{{ url_for('exhibits.preview', exhibit_id=item.id) }}">Preview and publish</a>
+          {% if item.publication_state != 'hidden' %}
+          <form method="post" action="{{ url_for('exhibits.archive', exhibit_id=item.id) }}">{{ security() }}<button class="text-button">Archive</button></form>
+          {% endif %}
+          {% if item.moderation_hidden %}<a href="{{ url_for('admin.report', exhibit_id=item.id) }}">Appeal moderation decision</a>{% endif %}
+        {% else %}
+          <a class="button" href="{{ url_for('museum.exhibit', slug=item.slug) }}">View exhibit</a>
+        {% endif %}
+      </div>
+    {% elif tab in ('requests', 'my-requests') %}
+      <div class="card-meta"><span class="eyebrow">Proposal · {{ date(item.created_at) }}</span>{{ status(item.status) }}</div>
+      <h3>{{ item.exhibit.label }}</h3>
+      <p><strong>Proposed by {{ item.applicant.display_name }}</strong></p>
+      <p class="multiline">{{ item.proposal }}</p>
+      <p><strong>First milestone:</strong> {{ item.milestone }}</p>
+      <p><strong>Materials:</strong> {{ item.materials }}</p>
+      {% if item.decision_note %}<p class="private-note"><strong>Private decision note:</strong> {{ item.decision_note }}</p>{% endif %}
+      {% if tab == 'requests' and item.status == 'pending' %}
+        {{ decision(url_for('continuations.accept', proposal_id=item.id), url_for('continuations.decline', proposal_id=item.id), 'Private decision note', 'Accept proposal', 'Decline proposal', item.id) }}
+        <p class="small muted">Accepting closes other pending requests for this exhibit.</p>
+      {% elif tab == 'my-requests' and item.status == 'pending' %}
+        <form method="post" action="{{ url_for('continuations.withdraw_request', proposal_id=item.id) }}">{{ security() }}<button class="button secondary">Withdraw request</button></form>
+      {% endif %}
+      {% if tab == 'requests' and item.continuation and item.continuation.status == 'active' %}
+        <details><summary>Manage active continuation</summary>
+          {% if item.continuation.updates|selectattr('review_status', 'equalto', 'approved')|list %}
+          <form method="post" action="{{ url_for('continuations.close_continuation', continuation_id=item.continuation.id, action='complete') }}">
+            {{ security() }}<button class="button">Mark milestone reached</button>
+          </form>
+          {% endif %}
+          <form method="post" class="decision-form" action="{{ url_for('continuations.close_continuation', continuation_id=item.continuation.id, action='end') }}">
+            {{ security() }}
+            <label for="reason-{{ item.id }}">Private reason for ending</label>
+            <textarea id="reason-{{ item.id }}" name="note" rows="2" maxlength="400" required></textarea>
+            <button class="button secondary">End continuation</button>
+          </form>
+        </details>
+      {% endif %}
+    {% elif tab == 'review' %}
+      <div class="card-meta"><span class="eyebrow">{{ item.continuation.exhibit.label }}</span>{{ status(item.review_status) }}</div>
+      <h3>{{ item.title }}</h3>
+      <p><strong>Submitted by {{ item.author.display_name }}</strong></p><p class="multiline">{{ item.body }}</p>
+      <p><strong>Next step:</strong> {{ item.next_step }}</p>
+      {{ picture(item.media) }}
+      {% if item.link %}<p><a href="{{ item.link }}" rel="nofollow ugc noopener">Contributor-supplied link ↗</a></p>{% endif %}
+      {{ decision(url_for('continuations.review', update_id=item.id, decision='approve'), url_for('continuations.review', update_id=item.id, decision='reject'), 'Private review note', 'Approve for timeline', 'Return to contributor', item.id) }}
+    {% else %}
+      <div class="card-meta"><span class="eyebrow">Continuation</span>{{ status(item.status) }}</div>
+      <h3>{{ item.exhibit.label }}</h3><p><strong>First milestone:</strong> {{ item.request.milestone }}</p>
+      {% if item.end_reason %}<p class="private-note"><strong>Private closure note:</strong> {{ item.end_reason }}</p>{% endif %}
+      {% if item.status == 'active' %}
+        <div class="actions">
+          {% if item.exhibit.is_public %}<a class="button" href="{{ url_for('continuations.submit_update', continuation_id=item.id) }}">Submit progress</a>{% endif %}
+          <form method="post" action="{{ url_for('continuations.close_continuation', continuation_id=item.id, action='withdraw') }}">{{ security() }}<button class="button secondary">Withdraw continuation</button></form>
+        </div>
+      {% endif %}
+      {% for update in item.updates %}
+        <details>
+          <summary>{{ update.title }} · {{ update.review_status|capitalize }}</summary>
+          <p class="multiline">{{ update.body }}</p>
+          {% if update.review_note %}<p class="private-note"><strong>Private review note:</strong> {{ update.review_note }}</p>{% endif %}
+        </details>
+      {% endfor %}
+    {% endif %}
+  </article>
+  {% endfor %}
+  </div>
+</section>
+{% endblock %}

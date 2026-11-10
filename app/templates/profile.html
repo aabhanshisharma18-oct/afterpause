@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% from "_components.html" import field, security with context %}
+{% block title %}Profile · Afterpause{% endblock %}
+{% block content %}
+<section class="shell section narrow">
+  <p class="eyebrow">Your account</p><h1>Profile</h1>
+  <p class="muted">Signed in as {{ g.user.email }}. Your email stays private.</p>
+  <form method="post" class="form-panel">
+    {{ security(false) }}
+    {{ field('display_name', 'Display name', g.user.display_name, limit=70, error=error, help='Published timeline entries keep the name credited when they were posted.') }}
+    <button class="button">Save profile</button>
+  </form>
+</section>
+{% endblock %}

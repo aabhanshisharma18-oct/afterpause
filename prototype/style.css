@@ -64,7 +64,7 @@ nav a:hover { color: var(--plum); text-decoration: underline; }
   background-color: #f3ebe2;
   background-image:
     radial-gradient(ellipse at 23% 38%, rgba(250, 249, 246, .42), transparent 65%),
-    url('images/hero-workspace-reference.png');
+    url('../app/static/images/hero-workspace-reference.png');
   background-size: cover;
   background-position: center bottom;
   border-bottom: 1px solid var(--border);
@@ -261,7 +261,7 @@ summary::marker { color: var(--plum); }
   padding-block: 60px;
   scroll-margin-top: 24px;
   border-top: 1px solid var(--border);
-  background-image: linear-gradient(100deg, var(--ivory) 46%, rgba(250, 249, 246, .45)), url('images/creative-workspace.png');
+  background-image: linear-gradient(100deg, var(--ivory) 46%, rgba(250, 249, 246, .45)), url('../app/static/images/creative-workspace.png');
   background-size: cover, 680px auto;
   background-repeat: no-repeat;
   background-position: center, right bottom;

@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+{% from "_components.html" import picture, status, security, date with context %}
+{% block title %}{{ exhibit.label }} · Afterpause{% endblock %}
+{% block content %}
+<article class="shell section exhibit">
+  {% if preview %}
+    <aside class="notice">
+      <strong>Owner preview.</strong> Review how visitors will see the exhibit. Current visibility: {{ exhibit.publication_state }}{% if exhibit.moderation_hidden %}, hidden by moderation{% endif %}.
+      <div class="actions">
+        <a href="{{ url_for('exhibits.edit', exhibit_id=exhibit.id) }}">Edit exhibit</a>
+        {% if not exhibit.is_public and not exhibit.moderation_hidden %}
+        <form method="post" action="{{ url_for('exhibits.publish', exhibit_id=exhibit.id) }}">{{ security() }}<button class="button">Publish exhibit</button></form>
+        {% elif exhibit.is_public %}
+        <a class="button secondary" href="{{ url_for('museum.exhibit', slug=exhibit.slug) }}">View public exhibit</a>
+        {% endif %}
+      </div>
+    </aside>
+  {% else %}
+    <a class="back" href="{{ url_for('museum.explore', room=exhibit.room_id) }}">← {{ exhibit.room.name if exhibit.room else 'Explore' }}</a>
+  {% endif %}
+  <header class="exhibit-header">
+    <div class="card-meta">
+      <span class="eyebrow">Exhibit {{ '%03d'|format(exhibit.id) }}{% if exhibit.room %} · {{ exhibit.room.name }}{% endif %}</span>
+      {{ status(exhibit.continuation_state) }}
+      {% if exhibit.is_demo %}<span class="pill demo">Demo</span>{% endif %}
+    </div>
+    <h1>{{ exhibit.label }}</h1>
+    <p class="lede">{{ exhibit.intention or 'The intention will appear here.' }}</p>
+  </header>
+  {{ picture(exhibit.media|first|default(none), lazy=false) }}
+  <div class="credit-line"><strong>Original work by {{ exhibit.owner.display_name }}</strong>{% if exhibit.attribution %}<span>{{ exhibit.attribution }}</span>{% endif %}</div>
+  <div class="exhibit-columns">
+    <div class="prose">
+      <section><h2>The story</h2><p class="multiline">{{ exhibit.story or 'The story will appear here.' }}</p></section>
+      <section><h2>What exists</h2><p class="multiline">{{ exhibit.current_work or 'The existing work will appear here.' }}</p>
+        {% if exhibit.pause_reason or exhibit.pause_note %}<h3>Why it paused</h3><p class="multiline">{{ pause_reasons.get(exhibit.pause_reason, '') }}{% if exhibit.pause_reason and exhibit.pause_note %} · {% endif %}{{ exhibit.pause_note }}</p>{% endif %}
+        {% if exhibit.media|length > 1 %}<div class="media-strip">{% for image in exhibit.media[1:] %}{{ picture(image) }}{% endfor %}</div>{% endif %}
+      </section>
+      <section>
+        <h2>Materials and permissions</h2>
+        <p>{{ permissions.get(exhibit.permissions, 'Reuse terms are not yet selected.') }}</p>
+        <p class="muted">A continuation keeps the original creator credited. Follow the permissions attached to each material.</p>
+        {% if exhibit.repository_url or exhibit.demo_url %}<ul>
+          {% if exhibit.repository_url %}<li><a href="{{ exhibit.repository_url }}" rel="nofollow ugc noopener">Original repository ↗</a></li>{% endif %}
+          {% if exhibit.demo_url %}<li><a href="{{ exhibit.demo_url }}" rel="nofollow ugc noopener">Original demo ↗</a></li>{% endif %}
+        </ul>{% endif %}
+      </section>
+    </div>
+    <aside class="invitation">
+      <p class="eyebrow">The invitation</p>
+      <h2>What’s needed next</h2>
+      <p>{{ exhibit.next_step or 'The next step will appear here.' }}</p>
+      {% if exhibit.skills %}<p><strong>Skills:</strong> {{ exhibit.skills }}</p>{% endif %}
+      {% if exhibit.task_size %}<p><strong>Estimated size:</strong> {{ exhibit.task_size }}</p>{% endif %}
+      {% if exhibit.tags %}<ul class="tag-list" aria-label="Tags">{% for tag in exhibit.tags %}<li><a href="{{ url_for('museum.explore', q=tag.name) }}">{{ tag.name }}</a></li>{% endfor %}</ul>{% endif %}
+      {% if not preview %}
+        {% if g.user and g.user.id == exhibit.owner_id %}
+          <a class="button" href="{{ url_for('exhibits.preview', exhibit_id=exhibit.id) }}">Manage exhibit</a>
+        {% elif exhibit.continuation_state != 'in-progress' %}
+          <a class="button" href="{{ url_for('continuations.request_continuation', exhibit_id=exhibit.id) }}">Continue this idea</a>
+          <p class="small muted">Send a proposal to the creator. The original work stays theirs.</p>
+        {% else %}<p class="muted">A contributor is working on the next chapter.</p>{% endif %}
+        <div class="exhibit-actions">
+          {% if g.user %}
+            <form method="post" action="{{ url_for('exhibits.bookmark', exhibit_id=exhibit.id) }}">{{ security() }}
+              <input type="hidden" name="save" value="{{ 'no' if saved else 'yes' }}"><button class="text-button">{{ 'Remove from saved' if saved else 'Save exhibit' }}</button>
+            </form>
+          {% else %}
+            <a href="{{ url_for('auth.login', next=request.path) }}">Sign in to save</a>
+          {% endif %}
+          <a href="{{ url_for('museum.ticket', slug=exhibit.slug) }}">Share exhibit ticket</a>
+          <a href="{{ url_for('admin.report', exhibit_id=exhibit.id) }}">Report attribution or content</a>
+        </div>
+      {% endif %}
+    </aside>
+  </div>
+  {% if comparison %}
+  <details class="comparison" data-comparison>
+    <summary>Compare the original and the latest contribution</summary>
+    <div class="tabs" role="tablist" aria-label="Exhibit comparison" hidden>
+      <button type="button" id="before-tab" role="tab" aria-controls="before-preview">Original chapter</button>
+      <button type="button" id="after-tab" role="tab" aria-controls="after-preview">Latest contribution</button>
+    </div>
+    {% for event in comparison %}
+    <section id="{{ 'before' if loop.first else 'after' }}-preview" class="comparison-panel">
+      <h3>{{ 'Original chapter' if loop.first else 'Latest contribution' }}</h3>
+      {{ picture(event.media) }}
+      <p>{{ event.title }} · {{ event.actor_name }} · {{ date(event.created_at) }}</p>
+    </section>
+    {% endfor %}
+  </details>
+  {% endif %}
+  {% include "_timeline.html" %}
+</article>
+{% endblock %}

@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% from "_components.html" import picture, security with context %}
+{% block title %}Afterpause · The Museum of Abandoned Projects{% endblock %}
+{% block body_class %}entrance-page{% endblock %}
+{% block content %}
+<section class="entrance">
+  <div class="shell entrance-grid">
+    <div class="entrance-copy">
+      <p class="eyebrow">The museum of abandoned projects</p>
+      <h1>Afterpause<span>.</span></h1>
+      <p class="lede">A digital museum for unfinished projects and the people who see what they could become.</p>
+      <div class="actions">
+        <a class="button" href="{{ url_for('museum.explore') }}">Enter the museum <span aria-hidden="true">↗</span></a>
+        {% if g.user %}
+          <form method="post" action="{{ url_for('exhibits.create') }}">{{ security() }}<button class="button ghost">Exhibit a project</button></form>
+        {% else %}
+          <a class="button ghost" href="{{ url_for('auth.login') }}">Exhibit a project</a>
+        {% endif %}
+      </div>
+    </div>
+    <figure class="spotlight">
+      {% if featured %}
+        {{ picture(featured.media|first|default(none), lazy=false) }}
+        <figcaption>
+          <span class="eyebrow">In the spotlight · No. {{ '%03d'|format(featured.id) }}{% if featured.is_demo %} · Demo{% endif %}</span>
+          <h2><a href="{{ url_for('museum.exhibit', slug=featured.slug) }}">{{ featured.title }}</a></h2>
+          <p>{{ featured.intention }}</p>
+        </figcaption>
+      {% else %}
+        <div class="picture"><img src="{{ url_for('static', filename='images/campus-guide-reference.png') }}" alt="Illustrated campus map with a walking route"></div>
+        <figcaption><span class="eyebrow">From the concept archive</span><h2>Campus Guide</h2><p>An illustration of the work the museum is here to collect.</p></figcaption>
+      {% endif %}
+    </figure>
+  </div>
+</section>
+<section class="shell section">
+  <p class="eyebrow">How a new chapter begins</p>
+  <h2>Someone paused. Someone else begins.</h2>
+  <div class="steps">
+    <article><span class="eyebrow">01 / Explore</span><h3>Find an idea</h3><p>See what exists and what the creator wants to try next.</p></article>
+    <article><span class="eyebrow">02 / Propose</span><h3>Offer a small next step</h3><p>Ask the creator and share the first milestone you’d tackle.</p></article>
+    <article><span class="eyebrow">03 / Continue</span><h3>Leave a public chapter</h3><p>Approved work joins the original on the timeline, with both names credited.</p></article>
+  </div>
+  <a href="{{ url_for('museum.guidelines') }}">Read the contribution guidelines</a>
+</section>
+{% endblock %}

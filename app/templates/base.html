@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="A digital museum for unfinished projects and the people who see what they could become.">
+  <title>{% block title %}Afterpause{% endblock %}</title>
+  <link rel="icon" href="{{ url_for('static', filename='images/favicon.svg') }}" type="image/svg+xml">
+  <link rel="stylesheet" href="{{ url_for('static', filename='museum.css') }}">
+  <script src="{{ url_for('static', filename='museum.js') }}" defer></script>
+</head>
+<body class="{% block body_class %}{% endblock %}">
+  <a class="skip" href="#main">Skip to content</a>
+  <header class="site-header">
+    <div class="shell nav-shell">
+      <a class="wordmark" href="{{ url_for('museum.entrance') }}">afterpause<span>.</span></a>
+      <nav aria-label="Main navigation">
+        <a href="{{ url_for('museum.explore') }}"{% if request.endpoint == 'museum.explore' %} aria-current="page"{% endif %}>Explore</a>
+        {% if g.user %}
+          <a href="{{ url_for('exhibits.dashboard') }}"{% if request.endpoint == 'exhibits.dashboard' %} aria-current="page"{% endif %}>Dashboard</a>
+          <a href="{{ url_for('auth.profile') }}">Profile</a>
+          {% if g.user.role == 'admin' %}<a href="{{ url_for('admin.reports') }}">Moderation</a>{% endif %}
+          <form method="post" action="{{ url_for('auth.logout') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button class="text-button">Sign out</button>
+          </form>
+        {% else %}
+          <a href="{{ url_for('auth.login') }}">Sign in</a>
+          <a class="button nav-action" href="{{ url_for('auth.register') }}">Join the museum</a>
+        {% endif %}
+      </nav>
+    </div>
+  </header>
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    <div class="shell notices">
+      {% for category, message in messages %}
+      <p class="notice {{ category }}" role="{{ 'alert' if category == 'error' else 'status' }}">{{ message }}</p>
+      {% endfor %}
+    </div>
+    {% endif %}
+  {% endwith %}
+  <main id="main" tabindex="-1">{% block content %}{% endblock %}</main>
+  <footer class="site-footer">
+    <div class="shell footer-shell">
+      <a class="wordmark" href="{{ url_for('museum.entrance') }}">afterpause<span>.</span></a>
+      <p>Someone paused. Someone else begins.</p>
+      <a href="{{ url_for('museum.guidelines') }}">Contribution guidelines</a>
+      <a href="https://github.com/aabhanshisharma18-oct/afterpause">GitHub</a>
+    </div>
+  </footer>
+</body>
+</html>
