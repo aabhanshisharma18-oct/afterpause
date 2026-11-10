@@ -31,7 +31,12 @@
         {% endfor %}
       </select>
     {% elif type == 'file' %}
-      <input {{ attrs|safe }} type="file" accept="image/png,image/jpeg,image/webp">
+      <input {{ attrs|safe }} type="file" accept="image/png,image/jpeg,image/webp"
+             data-upload-limit="{{ max_image_bytes }}">
+      <figure class="upload-preview" data-upload-preview hidden>
+        <img alt="" hidden>
+        <figcaption role="status"></figcaption>
+      </figure>
     {% else %}
       <input {{ attrs|safe }} type="{{ type }}" maxlength="{{ limit }}"{% if type != 'password' %} value="{{ entered or '' }}"{% else %} minlength="8"{% endif %}{% if autocomplete %} autocomplete="{{ autocomplete }}"{% endif %}>
     {% endif %}

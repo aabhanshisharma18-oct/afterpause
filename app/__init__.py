@@ -9,6 +9,7 @@ from sqlalchemy import event
 from sqlalchemy.exc import IntegrityError
 
 from .models import CATEGORIES, PAUSE_REASONS, PERMISSIONS, ROOMS, STATES, User, db
+from .services import MAX_IMAGE
 
 csrf = CSRFProtect()
 migrate = Migrate()
@@ -73,7 +74,7 @@ def create_app(config=None):
     @app.context_processor
     def shared():
         return dict(rooms=ROOMS, categories=CATEGORIES, states=STATES, permissions=PERMISSIONS,
-                    pause_reasons=PAUSE_REASONS, action_token=lambda: secrets.token_hex(16))
+                    pause_reasons=PAUSE_REASONS, max_image_bytes=MAX_IMAGE, action_token=lambda: secrets.token_hex(16))
 
     @app.after_request
     def headers(response):

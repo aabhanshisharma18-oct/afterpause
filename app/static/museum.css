@@ -262,3 +262,9 @@ summary { cursor: pointer; color: var(--plum-dark); text-decoration: underline; 
   .steps { grid-template-columns: 1fr; gap: 26px; }
   .steps article + article { border-left: 0; border-top: 1px solid var(--line); padding: 22px 0 0; }
 }
+
+.visually-hidden { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+[data-gallery-content][aria-busy=true] { cursor: progress; }
+.upload-preview { margin: .7rem 0 0; padding: .7rem; border: 1px solid var(--line); border-radius: .3rem; background: var(--ivory); }
+.upload-preview img { display: block; width: auto; max-width: 100%; max-height: 13rem; margin-bottom: .55rem; border-radius: .2rem; }
+.upload-preview figcaption { overflow-wrap: anywhere; font-size: .85rem; }

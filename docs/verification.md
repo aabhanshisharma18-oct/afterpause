@@ -8,7 +8,8 @@ The first release supports the complete creator and contributor loop in the thre
 | Permissions | Tests reject owner impersonation, self requests, contributor approval, unauthorised administration, public access to private media and direct access to drafts and hidden exhibits. |
 | Transactions | A simulated failure after flush leaves the request, active slot, exhibit and timeline unchanged. Two concurrent MySQL acceptances yield one redirect, one conflict, and one continuation. |
 | Moderation and recovery | A report is recorded, the administrator hides and restores public visibility, and approved work remains available. The backup and restore commands restore a separate MySQL database and its media directory. |
-| Discovery | Browser checks cover shared filters, pagination, missing media, keyboard focus, comparison and narrow layouts. |
+| Discovery | Browser checks cover shared filters, in-place updates, Back and Forward, full-page fallback, pagination, missing media, keyboard focus, comparison and narrow layouts. |
+| Demo setup | Two seed runs on a fresh database leave one private BorrowBox draft. The browser walkthrough covers publishing, proposal revision, screenshot preview, approval, and hide and unhide. |
 
 ## Screenshots
 

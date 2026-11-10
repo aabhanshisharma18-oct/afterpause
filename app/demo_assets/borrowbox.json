@@ -1,0 +1,17 @@
+{
+  "title": "BorrowBox — Campus Equipment Library",
+  "intention": "Help students find shared campus gear and see what is available before they walk to a pickup desk.",
+  "story": "Fictional classroom demo. A student club needs a tripod and a presentation adapter for an event, but each campus desk keeps its own list. BorrowBox sketches a single catalogue with a pickup location and a loan status for every item.",
+  "room_id": "useful-little-tools",
+  "category": "software",
+  "current_work": "A desktop catalogue mockup with five fictional items, their categories, pickup points, and availability. The original design has no search or filters.",
+  "pause_reason": "time",
+  "pause_note": "The catalogue layout was drafted before the semester ended. Search and filters are still open.",
+  "alt_text": "BorrowBox catalogue showing five items with pickup points and loan status, before search and filters.",
+  "next_step": "Design search and category filters, plus an Available now option. Show that Presentation and Available now together return two items.",
+  "skills": "HTML, CSS, JavaScript, UI design",
+  "task_size": "One afternoon",
+  "tags": "campus, equipment, search, filters",
+  "attribution": "BorrowBox is a fictional classroom exhibit. The original interface and all sample inventory were created for this demonstration.",
+  "permissions": "ask"
+}
