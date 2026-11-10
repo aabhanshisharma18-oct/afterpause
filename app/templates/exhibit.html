@@ -26,6 +26,12 @@
     </div>
     <h1>{{ exhibit.label }}</h1>
     <p class="lede">{{ exhibit.intention or 'The intention will appear here.' }}</p>
+    {% if not preview %}
+    <nav class="exhibit-jumps" aria-label="On this exhibit">
+      <a href="#invitation">See the next step <span aria-hidden="true">↓</span></a>
+      {% if events.total > 1 %}<a href="#timeline">Jump to the timeline <span aria-hidden="true">↓</span></a>{% endif %}
+    </nav>
+    {% endif %}
   </header>
   {{ picture(exhibit.media|first|default(none), lazy=false) }}
   <div class="credit-line"><strong>Original work by {{ exhibit.owner.display_name }}</strong>{% if exhibit.attribution %}<span>{{ exhibit.attribution }}</span>{% endif %}</div>
@@ -46,20 +52,42 @@
         </ul>{% endif %}
       </section>
     </div>
-    <aside class="invitation">
+    <aside class="invitation" id="invitation" aria-labelledby="invitation-title">
       <p class="eyebrow">The invitation</p>
-      <h2>What’s needed next</h2>
+      <h2 id="invitation-title">What’s needed next</h2>
       <p>{{ exhibit.next_step or 'The next step will appear here.' }}</p>
       {% if exhibit.skills %}<p><strong>Skills:</strong> {{ exhibit.skills }}</p>{% endif %}
       {% if exhibit.task_size %}<p><strong>Estimated size:</strong> {{ exhibit.task_size }}</p>{% endif %}
       {% if exhibit.tags %}<ul class="tag-list" aria-label="Tags">{% for tag in exhibit.tags %}<li><a href="{{ url_for('museum.explore', q=tag.name) }}">{{ tag.name }}</a></li>{% endfor %}</ul>{% endif %}
       {% if not preview %}
-        {% if g.user and g.user.id == exhibit.owner_id %}
-          <a class="button" href="{{ url_for('exhibits.preview', exhibit_id=exhibit.id) }}">Manage exhibit</a>
-        {% elif exhibit.continuation_state != 'in-progress' %}
-          <a class="button" href="{{ url_for('continuations.request_continuation', exhibit_id=exhibit.id) }}">Continue this idea</a>
-          <p class="small muted">Send a proposal to the creator. The original work stays theirs.</p>
-        {% else %}<p class="muted">A contributor is working on the next chapter.</p>{% endif %}
+        <div class="continuation-action">
+          {% if g.user and g.user.id == exhibit.owner_id %}
+            <div class="actions">
+              <a class="button" href="{{ url_for('exhibits.preview', exhibit_id=exhibit.id) }}">Manage exhibit</a>
+              <a href="{{ url_for('exhibits.dashboard', tab='requests') }}">Review proposals</a>
+            </div>
+          {% elif own_proposal and own_proposal.status == 'pending' %}
+            <div class="card-meta"><strong>Your proposal</strong> {{ status('pending') }}</div>
+            <p class="small muted">Waiting for the creator’s decision. You can edit your plan in the meantime.</p>
+            <div class="actions">
+              <a class="button" href="{{ url_for('continuations.edit_request', proposal_id=own_proposal.id) }}">Edit proposal</a>
+              <a href="{{ url_for('exhibits.dashboard', tab='my-requests') }}">My requests</a>
+            </div>
+          {% elif own_proposal and own_proposal.continuation and own_proposal.continuation.status == 'active' %}
+            <div class="card-meta"><strong>Your continuation</strong> {{ status('accepted') }}</div>
+            <p class="small muted">Share a screenshot and a short update for the creator to review.</p>
+            <a class="button" href="{{ url_for('continuations.submit_update', continuation_id=own_proposal.continuation.id) }}">Submit progress</a>
+          {% elif exhibit.continuation_state != 'in-progress' %}
+            <a class="button" href="{{ url_for('continuations.request_continuation', exhibit_id=exhibit.id) }}">Continue this idea</a>
+            <p class="small muted">Send a proposal to the creator. The original work stays theirs.</p>
+          {% else %}
+            <p class="muted">A contributor is working on the next chapter.</p>
+          {% endif %}
+          {% if own_proposal and own_proposal.status != 'pending' and
+                (not own_proposal.continuation or own_proposal.continuation.status != 'active') %}
+            <a class="small" href="{{ url_for('exhibits.dashboard', tab='my-requests') }}">View your proposal history</a>
+          {% endif %}
+        </div>
         <div class="exhibit-actions">
           {% if g.user %}
             <form method="post" action="{{ url_for('exhibits.bookmark', exhibit_id=exhibit.id) }}">{{ security() }}

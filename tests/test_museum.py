@@ -11,6 +11,15 @@ from app.models import Continuation, Exhibit, Media, ModerationDecision, Proposa
 from conftest import csrf, draft, log_in, post, propose, publish, register, screenshot, submit_update
 
 
+def review_version(owner, proposal_id):
+    html = owner.get("/dashboard?tab=requests").get_data(as_text=True)
+    form = re.search(rf'action="/requests/{proposal_id}/accept"[^>]*>(.*?)</form>', html, re.S)
+    assert form
+    match = re.search(r'name="proposal_version" value="([a-f0-9]{64})"', form.group(1))
+    assert match
+    return match.group(1)
+
+
 def test_full_journey_moderation_and_restart(app):
     creator = register(app, "Creator")
     contributor = register(app, "Contributor")
@@ -33,7 +42,7 @@ def test_full_journey_moderation_and_restart(app):
     assert post(contributor, f"/requests/{proposal_id}/accept").status_code == 403
     assert post(contributor, f"/exhibits/{item_id}/requests").status_code == 409
     assert b"Private menu proposal" in contributor.get("/dashboard?tab=my-requests").data
-    assert post(creator, f"/requests/{proposal_id}/accept", {"note": "Private acceptance note"}).status_code == 303
+    assert post(creator, f"/requests/{proposal_id}/accept", {"note": "Private acceptance note", "proposal_version": review_version(creator, proposal_id)}).status_code == 303
     with app.app_context():
         continuation_id = db.session.scalar(select(Continuation.id))
 
@@ -131,13 +140,14 @@ def test_simultaneous_acceptance_and_transaction_rollback(app, monkeypatch):
     with app.app_context():
         ids = list(db.session.scalars(select(Proposal.id).order_by(Proposal.id)))
 
+    versions = [review_version(owner, proposal_id) for proposal_id in ids]
     original = continuations.add_event
     def fail_after_flush(*_args, **_kwargs):
         db.session.flush()
         raise RuntimeError("Simulated failure before event creation")
     monkeypatch.setattr(continuations, "add_event", fail_after_flush)
     with pytest.raises(RuntimeError, match="Simulated failure"):
-        post(owner, f"/requests/{ids[0]}/accept")
+        post(owner, f"/requests/{ids[0]}/accept", {"proposal_version": versions[0]})
     with app.app_context():
         assert list(db.session.scalars(select(Proposal.status))) == ["pending", "pending"]
         assert db.session.scalar(select(Continuation.id)) is None
@@ -150,7 +160,8 @@ def test_simultaneous_acceptance_and_transaction_rollback(app, monkeypatch):
     barrier = Barrier(2)
     def accept(index):
         barrier.wait(timeout=5)
-        return post(clients[index], f"/requests/{ids[index]}/accept", csrf_token=csrf_tokens[index]).status_code
+        return post(clients[index], f"/requests/{ids[index]}/accept",
+                    {"proposal_version": versions[index]}, csrf_token=csrf_tokens[index]).status_code
     with ThreadPoolExecutor(max_workers=2) as executor:
         outcomes = list(executor.map(accept, range(2)))
     assert sorted(outcomes) == [303, 409]
@@ -169,7 +180,7 @@ def test_private_withdrawal_and_rejection(app):
     with app.app_context():
         request_id = db.session.scalar(select(Proposal.id))
     assert post(stranger, f"/requests/{request_id}/withdraw").status_code == 403
-    assert post(owner, f"/requests/{request_id}/decline", {"note": "Private decline note"}).status_code == 303
+    assert post(owner, f"/requests/{request_id}/decline", {"note": "Private decline note", "proposal_version": review_version(owner, request_id)}).status_code == 303
     assert b"Private decline note" in contributor.get("/dashboard?tab=my-requests").data
     assert b"Private decline note" not in stranger.get(public).data
     propose(contributor, item)
@@ -179,7 +190,7 @@ def test_private_withdrawal_and_rejection(app):
     propose(contributor, item)
     with app.app_context():
         request_id = db.session.scalar(select(Proposal.id).where(Proposal.status == "pending"))
-    assert post(owner, f"/requests/{request_id}/accept").status_code == 303
+    assert post(owner, f"/requests/{request_id}/accept", {"proposal_version": review_version(owner, request_id)}).status_code == 303
     with app.app_context():
         continuation_id = db.session.scalar(select(Continuation.id))
     submit_update(contributor, continuation_id, "Private unfinished update")
@@ -212,3 +223,40 @@ def test_registration_profile_and_rate_limit(app):
                     csrf_token=token).status_code == 400
     assert post(guest, "/auth/login", {"email": "wrong@example.test", "password": "incorrect123"},
                 csrf_token=token).status_code == 429
+
+
+def test_pending_proposal_can_be_revised_and_stale_review_is_rejected(app):
+    owner = register(app, "Owner")
+    contributor = register(app, "Contributor")
+    stranger = register(app, "Stranger")
+    exhibit_id, public = publish(owner)
+    propose(contributor, exhibit_id)
+    with app.app_context():
+        proposal_id = db.session.scalar(select(Proposal.id))
+
+    edit = f"/requests/{proposal_id}/edit"
+    old_version = review_version(owner, proposal_id)
+    form = contributor.get(edit)
+    assert form.status_code == 200 and b"Private menu proposal" in form.data
+    assert edit.encode() in contributor.get(public).data
+    assert edit.encode() not in stranger.get(public).data
+    assert stranger.get(edit).status_code == 403
+    revised = {
+        "proposal_version": old_version,
+        "proposal": "Private revised plan for keyboard navigation",
+        "milestone": "Test the menu with a keyboard",
+        "materials": "Original map with permission",
+    }
+    assert post(owner, edit, revised).status_code == 403
+    assert post(contributor, edit, {**revised, "milestone": ""}).status_code == 400
+    assert post(contributor, edit, revised).location == public + "#invitation"
+    assert post(contributor, edit, revised).status_code == 409
+    assert revised["proposal"].encode() not in app.test_client().get(public).data
+    assert revised["proposal"].encode() in owner.get("/dashboard?tab=requests").data
+
+    accept = f"/requests/{proposal_id}/accept"
+    assert post(owner, accept, {"proposal_version": old_version}).status_code == 409
+    assert post(owner, accept, {"proposal_version": review_version(owner, proposal_id)}).status_code == 303
+    assert b"Submit progress" in contributor.get(public).data
+    assert edit.encode() not in contributor.get(public).data
+    assert post(contributor, edit, revised).status_code == 409

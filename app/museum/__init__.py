@@ -2,7 +2,7 @@ from flask import Blueprint, abort, g, render_template, request, url_for
 from sqlalchemy import or_, select
 from sqlalchemy.orm import joinedload, selectinload
 
-from ..models import Bookmark, CATEGORIES, Exhibit, ROOMS, STATES, Tag, TimelineEvent, db
+from ..models import Bookmark, CATEGORIES, Exhibit, Proposal, ROOMS, STATES, Tag, TimelineEvent, db
 from ..services import pagination_number, visible_exhibits
 
 bp = Blueprint("museum", __name__)
@@ -58,8 +58,14 @@ def detail(exhibit, *, preview=False):
             TimelineEvent.media_id.is_not(None)).order_by(TimelineEvent.id.desc()).limit(1))
         if first and first.media and latest:
             comparison = (first, latest)
+    own_proposal = None
+    if not preview and g.user and g.user.id != exhibit.owner_id:
+        own_proposal = db.session.scalar(select(Proposal)
+                                         .options(joinedload(Proposal.continuation))
+                                         .where(Proposal.exhibit_id == exhibit.id, Proposal.applicant_id == g.user.id)
+                                         .order_by(Proposal.id.desc()).limit(1))
     return render_template("exhibit.html", exhibit=exhibit, preview=preview, events=events,
-                           saved=saved, comparison=comparison)
+                           saved=saved, comparison=comparison, own_proposal=own_proposal)
 
 
 @bp.get("/exhibits/<slug>")
