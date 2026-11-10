@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% from "_components.html" import field, picture, security with context %}
+{% set steps = {1: 'The idea', 2: 'The current work', 3: 'The invitation'} %}
+{% block title %}{{ steps[step] }} · Afterpause{% endblock %}
+{% block content %}
+<section class="shell section narrow">
+  <a class="back" href="{{ url_for('exhibits.dashboard') }}">← My exhibits</a>
+  <p class="eyebrow">Exhibit workshop · Step {{ step }} of 3</p>
+  <h1>{{ steps[step] }}</h1>
+  <p class="muted">{{ 'Changes to this published exhibit will be visible immediately.' if exhibit.is_public else 'Your exhibit stays private until you publish it.' }}</p>
+  <nav class="tabs wizard-steps" aria-label="Submission steps">
+    {% for number, title in steps.items() %}
+    <a href="{{ url_for('exhibits.edit', exhibit_id=exhibit.id, step=number) }}"{% if step == number %} aria-current="step"{% endif %}>{{ number }}. {{ title }}</a>
+    {% endfor %}
+  </nav>
+  <form method="post" enctype="multipart/form-data" class="form-panel">
+    {{ security() }}
+    {% if step == 1 %}
+      {{ field('title', 'Title', exhibit.title, error=error) }}
+      {{ field('intention', 'One-sentence intention', exhibit.intention, 180, error=error, help='What was this project meant to do?') }}
+      {{ field('story', 'Project story', exhibit.story, 2400, 'textarea', error=error, help='What made the idea worth starting?') }}
+      {{ field('room_id', 'Museum room', exhibit.room_id, type='select', choices=rooms|room_names, error=error) }}
+      {{ field('category', 'Category', exhibit.category, type='select', choices=categories, error=error) }}
+    {% elif step == 2 %}
+      {{ field('current_work', 'What exists', exhibit.current_work, 1600, 'textarea', error=error) }}
+      {{ field('pause_reason', 'Pause reason', exhibit.pause_reason, type='select', choices=pause_reasons, required=false, error=error) }}
+      {{ field('pause_note', 'Anything else about the pause', exhibit.pause_note, 600, 'textarea', required=false, error=error, help='Share only what you’re comfortable sharing.') }}
+      {{ field('repository_url', 'Original repository URL', exhibit.repository_url, 500, 'url', required=false, error=error) }}
+      {{ field('demo_url', 'External demo URL', exhibit.demo_url, 500, 'url', required=false, error=error) }}
+      {% if exhibit.media %}<div class="media-strip">{% for image in exhibit.media %}{{ picture(image) }}{% endfor %}</div>{% endif %}
+      {% if exhibit.media|length < 4 %}
+        {{ field('image', 'Project screenshot', type='file', required=false, error=error, help='PNG, JPEG or WebP, up to 4 MB. The first image becomes your cover; one cover is needed to publish.') }}
+        {{ field('alt_text', 'Screenshot description', limit=180, required=false, error=error, help='Describe what someone should learn from the image.') }}
+        {% if exhibit.media|length < 3 %}
+          {{ field('second_image', 'Second screenshot', type='file', required=false, error=error) }}
+          {{ field('second_alt_text', 'Second screenshot description', limit=180, required=false, error=error) }}
+        {% endif %}
+      {% endif %}
+    {% else %}
+      {{ field('next_step', 'Suggested next step', exhibit.next_step, 240, 'textarea', error=error, help='Name one thing a contributor could complete.') }}
+      {{ field('skills', 'Useful skills', exhibit.skills, 160, required=false, error=error, help='Example: HTML, CSS, interaction design') }}
+      {{ field('task_size', 'Estimated task size', exhibit.task_size, 40, required=false, error=error, help='Example: One afternoon') }}
+      {{ field('tags', 'Tags', exhibit.tags|map(attribute='name')|join(', '), 160, required=false, error=error, help='Up to six tags separated by commas.') }}
+      {{ field('attribution', 'Creator credit', exhibit.attribution, 240, error=error, help='Credit the original creators and any reused assets.') }}
+      {{ field('permissions', 'Material permissions', exhibit.permissions, type='select', choices=permissions, error=error) }}
+      <label class="check"><input type="checkbox" name="share_confirmed" value="yes" required{% if request.form.get('share_confirmed') or (request.method == 'GET' and exhibit.share_confirmed) %} checked{% endif %}{% if error and error.field == 'share_confirmed' %} aria-describedby="share-error"{% endif %}> I have permission to share these materials and images.</label>
+      {% if error and error.field == 'share_confirmed' %}<p id="share-error" class="field-error" role="alert">{{ error }}</p>{% endif %}
+    {% endif %}
+    {% if error and step == 2 %}<p class="small muted">If you selected an image, choose it again before saving.</p>{% endif %}
+    <div class="actions">
+      <button class="button">{{ 'Save and preview' if step == 3 else 'Save and continue' }}</button>
+      <button class="button secondary" name="destination" value="dashboard">Save and return to dashboard</button>
+    </div>
+  </form>
+  <p><a href="{{ url_for('exhibits.preview', exhibit_id=exhibit.id) }}">Preview saved changes</a></p>
+</section>
+{% endblock %}

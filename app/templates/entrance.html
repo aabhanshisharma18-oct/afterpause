@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% from "_components.html" import picture, share_project with context %}
+{% block title %}Afterpause · The Museum of Abandoned Projects{% endblock %}
+{% block body_class %}entrance-page{% endblock %}
+{% block content %}
+<section class="entrance" aria-labelledby="hero-title">
+  <div class="shell entrance-grid">
+    <div class="entrance-copy">
+      <p class="eyebrow">Good ideas deserve another chapter</p>
+      <h1 id="hero-title">Not finished.<br><span>Still worth something.</span></h1>
+      <p class="lede">A place for unfinished projects and the people who see what they could become.</p>
+      <div class="actions">
+        <a class="button" href="#projects">Explore projects <span aria-hidden="true">↗</span></a>
+        {{ share_project('Share your project', 'text-button share-link') }}
+      </div>
+    </div>
+    <article class="spotlight" aria-labelledby="featured-title">
+      {% set featured = projects|first|default(none) %}
+      {% set campus_guide = featured and featured.slug == 'demo-campus-guide' %}
+      {% if not featured or campus_guide %}
+        <div class="picture">
+          <img src="{{ url_for('static', filename='images/campus-guide-reference.png') }}"
+               alt="Campus Guide concept with a map, walking route, and university building preview"
+               width="1536" height="1024" fetchpriority="high">
+        </div>
+      {% else %}
+        {{ picture(featured.media|first|default(none), lazy=false) }}
+      {% endif %}
+      <p class="eyebrow">Featured project{% if not featured or featured.is_demo %} · Demo{% endif %}</p>
+      <h2 id="featured-title">{% if featured %}<a href="{{ url_for('museum.exhibit', slug=featured.slug) }}">{{ featured.title }}</a>{% else %}Campus Guide{% endif %}</h2>
+      <p>{{ 'A better way to find your way around campus.' if not featured or campus_guide else featured.intention }}</p>
+      {% if not featured or campus_guide %}
+        <span class="project-tag">Looking for a frontend developer</span>
+      {% else %}
+        <span class="project-tag">{{ states[featured.continuation_state] }}</span>
+      {% endif %}
+    </article>
+  </div>
+</section>
+
+<section class="shell home-gallery" id="projects" aria-labelledby="gallery-title">
+  <h2 id="gallery-title">Pick up where someone left off.</h2>
+  <p class="muted">Find a small next step worth taking.</p>
+  {% if projects %}
+    <div class="home-gallery-links" aria-label="Explore museum rooms">
+      <a href="{{ url_for('museum.explore') }}">All projects</a>
+      {% for key, room in rooms.items() %}
+        <a href="{{ url_for('museum.explore', room=key) }}">{{ room[0] }}</a>
+      {% endfor %}
+    </div>
+    <div class="card-grid">
+      {% for exhibit in projects %}
+        <article class="home-card">
+          {{ picture(exhibit.media|first|default(none)) }}
+          <p class="project-tag">{{ categories[exhibit.category] }}{% if exhibit.is_demo %} · Demo{% endif %}</p>
+          <h3>{{ exhibit.title }}</h3>
+          <p class="muted">{{ exhibit.next_step }}</p>
+          <a href="{{ url_for('museum.exhibit', slug=exhibit.slug) }}" aria-label="View project: {{ exhibit.title }}">View project <span aria-hidden="true">↗</span></a>
+        </article>
+      {% endfor %}
+    </div>
+  {% else %}
+    <p>The museum is waiting for its first exhibit.</p>
+    <a href="{{ url_for('museum.explore') }}">Explore the rooms</a>
+  {% endif %}
+</section>
+
+{% for exhibit in projects if exhibit.slug == 'demo-reading-room' %}
+  <section class="shell home-chapter" aria-labelledby="home-chapter-title">
+    <div>
+      <p class="eyebrow">The next chapter</p>
+      <h2 id="home-chapter-title">A small contribution.<br>A new chapter.</h2>
+      <p class="muted">See how an unfinished idea can grow when someone adds a useful next step.</p>
+      <a href="{{ url_for('museum.exhibit', slug=exhibit.slug, _anchor='timeline') }}">Follow the Reading Room timeline</a>
+    </div>
+    {{ picture(exhibit.media|first|default(none)) }}
+  </section>
+{% endfor %}
+
+<section class="shell how-it-works" id="how-it-works" aria-labelledby="steps-title">
+  <h2 id="steps-title">Every idea can have a next chapter.</h2>
+  <div class="steps">
+    <article><p class="step-number">01</p><h3>Find a project</h3><p>Explore unfinished ideas across design, development, games, and more.</p></article>
+    <article><p class="step-number">02</p><h3>Suggest a next step</h3><p>Share your plan and ask the original creator for permission to continue.</p></article>
+    <article><p class="step-number">03</p><h3>Continue with credit</h3><p>Build on the original work, keeping both creators credited.</p></article>
+  </div>
+  <a href="{{ url_for('museum.guidelines') }}">Read the contribution guidelines</a>
+</section>
+{% endblock %}

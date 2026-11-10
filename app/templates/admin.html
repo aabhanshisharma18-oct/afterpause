@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% from "_components.html" import pages, security, status, date with context %}
+{% block title %}Moderation · Afterpause{% endblock %}
+{% block content %}
+<section class="shell section">
+  <p class="eyebrow">Administrators only</p><h1>Moderation</h1>
+  <p class="muted">Reports and decisions stay private. Hiding an exhibit removes its public page and media while retaining credit and approved work.</p>
+  {% if not reports.items %}<div class="empty"><p>There are no reports.</p></div>{% endif %}
+  <div class="entry-list">
+  {% for report in reports.items %}
+    <article class="entry">
+      <div class="card-meta"><span class="eyebrow">Report {{ report.id }} · {{ date(report.created_at) }}</span>{{ status(report.status) }}</div>
+      <h2>{{ report.exhibit.label }}</h2>
+      <p>Reported by {{ report.reporter.display_name }} · {{ 'Hidden by moderation' if report.exhibit.moderation_hidden else 'No visibility restriction' }}</p>
+      <p class="multiline">{{ report.reason }}</p>
+      <a href="{{ url_for('admin.inspect', exhibit_id=report.exhibit_id) }}">Inspect exhibit and private requests</a>
+      {% if report.status == 'open' or report.exhibit.moderation_hidden %}
+        {% set action = 'unhide' if report.exhibit.moderation_hidden else 'hide' %}
+        <form method="post" class="decision-form" action="{{ url_for('admin.decide', exhibit_id=report.exhibit_id, action=action) }}">
+          {{ security() }}
+          <input type="hidden" name="report_id" value="{{ report.id }}">
+          <label for="note-{{ report.id }}">Private moderation note</label>
+          <textarea name="note" id="note-{{ report.id }}" rows="2" maxlength="600" required></textarea>
+          <div class="actions">
+            <button class="button">{{ action|capitalize }} exhibit</button>
+            {% if report.status == 'open' %}<button class="button secondary" formaction="{{ url_for('admin.decide', exhibit_id=report.exhibit_id, action='resolve') }}">Resolve without visibility change</button>{% endif %}
+          </div>
+        </form>
+      {% endif %}
+    </article>
+  {% endfor %}
+  </div>
+  {{ pages(reports, report_page, 'Reports') }}
+  {% if history %}
+  <h2>Recent decisions</h2>
+  <ul class="audit">{% for decision in history %}<li><strong>{{ decision.action|capitalize }} · {{ decision.exhibit.label }}</strong> by {{ decision.moderator.display_name }} · {{ date(decision.created_at) }}<br>{{ decision.note }}</li>{% endfor %}</ul>
+  {% endif %}
+</section>
+{% endblock %}

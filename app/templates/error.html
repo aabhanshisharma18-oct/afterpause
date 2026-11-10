@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block title %}{{ title }} · Afterpause{% endblock %}
+{% block content %}
+<section class="shell section narrow">
+  <p class="eyebrow">Museum notice · {{ code }}</p><h1>{{ title }}</h1>
+  {% if code == 404 %}<p>This exhibit or page may have moved, or it may be private.</p>{% else %}<p>{{ detail }}</p>{% endif %}
+  <div class="actions"><a class="button" href="{{ url_for('museum.explore') }}">Back to the museum</a>{% if g.user %}<a href="{{ url_for('exhibits.dashboard') }}">Go to dashboard</a>{% endif %}</div>
+</section>
+{% endblock %}

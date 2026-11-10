@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% from "_components.html" import field, security with context %}
+{% block title %}Continue {{ exhibit.title }} · Afterpause{% endblock %}
+{% block content %}
+<section class="shell section narrow">
+  <a class="back" href="{{ url_for('museum.exhibit', slug=exhibit.slug) }}">← {{ exhibit.title }}</a>
+  <p class="eyebrow">Continuation proposal</p><h1>Continue this idea</h1>
+  <p>Suggest a next step for <strong>{{ exhibit.title }}</strong>. Your proposal and any decision notes stay private to you, the creator, and authorised moderators.</p>
+  <form method="post" class="form-panel">
+    {{ security() }}
+    {{ field('proposal', 'What would you like to do?', limit=1400, type='textarea', error=error) }}
+    {{ field('milestone', 'First milestone', limit=240, error=error) }}
+    {{ field('materials', 'Materials you will use', limit=400, type='textarea', error=error, help='Name the files or assets you plan to use and how you’ll respect their permissions.') }}
+    <button class="button">Send proposal</button>
+  </form>
+</section>
+{% endblock %}

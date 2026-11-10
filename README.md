@@ -1,73 +1,74 @@
 # Afterpause
 
-Someone paused. Someone else begins.
+**Someone paused. Someone else begins.** Afterpause is a digital museum for unfinished software and design projects. Visitors browse without an account. Creators save and preview private exhibits, contributors propose a continuation, and the public timeline shows approved work with both credits.
 
-A place for unfinished projects and the people who see what they could become.
-This college project starts with a plain HTML, CSS, and JavaScript homepage.
-No framework, package installation, or build command is needed.
+## Start locally
 
-## Homepage features
+Use Python 3.12 or newer. From the repository root:
 
-- Plum and ivory theme with a softly faded workspace background.
-- Featured Campus Guide concept and three sample project cards.
-- Category filters, visible project counts, and expandable project details.
-- An original/new-contribution switch with credit for both contributors.
-- Mobile layouts, keyboard controls, a skip link, and reduced-motion support.
-
-The gallery labels its projects as samples. The Campus Guide and Reading Room
-screens are generated concept images, not functioning apps. The before/after
-search field illustrates a proposed contribution; it does not search books.
-Login, project publishing, contribution requests, and database storage are the
-next development stages and are not implemented yet.
-
-## Run locally
-
-Open a terminal in this repository folder and run:
-
-```sh
-python3 -m http.server 8000 --bind 127.0.0.1
+```bash
+bash scripts/setup.sh
+bash scripts/dev.sh
 ```
 
-Visit http://127.0.0.1:8000. Press Ctrl+C to stop the server.
-You can also open `index.html` directly in a browser.
+Open [http://127.0.0.1:8000](http://127.0.0.1:8000). A fresh install starts with an empty collection. The quick start uses SQLite; the project stack and concurrency acceptance target use **MySQL 8.4**, Flask, Jinja, SQLAlchemy and Alembic.
 
-## Files
+For a separate labelled classroom demo:
 
-- `index.html`: homepage sections and sample project content.
-- `style.css`: shared colours, layout, hover effects, and mobile styles.
-- `script.js`: category filters and chapter switching.
-- `images/`: local background, sample project previews, and site icon.
+```bash
+bash scripts/demo.sh
+APP_ENV=demo bash scripts/dev.sh
+```
 
-## Change the content
+The seed asks for a password for `creator@example.test`, `contributor@example.test`, and `admin@example.test`. Rerunning it refreshes the demo passwords and fills missing fixtures without replacing existing exhibits. Demo mode uses a separate database and upload directory. Do not point it at a live database.
 
-Edit a card in `index.html` to change its title, next step, or details. Its
-`data-category` value decides which filters it matches. Shared theme colours
-are at the top of `style.css`. The hero's gradient controls the background fade
-without changing the opacity of its text.
+## Linux and MySQL setup
 
-## Image assets
+Install Python 3.12+, the matching venv package, and either MySQL 8.4 with client tools or Docker with the Compose plugin. Copy `.env.example` to `.env`, set a random `SECRET_KEY` (for example, `python3 -c 'import secrets; print(secrets.token_hex(32))'`), and replace the database passwords. Match the database URL ports to `MYSQL_PORT`. URL-encode any reserved characters in passwords embedded in database URLs.
 
-The four PNG files were made with the built-in image generation tool as
-illustrative demo assets. They are stored locally; no external image service
-is needed. The SVG favicon is a simple code-drawn site icon.
+With Compose:
 
-- `creative-workspace.png`: overhead cream desk with notebook wireframes,
-  plum pencil, camera, and cropped laptop; the centre stays empty for copy.
-- `campus-guide.png`: campus map UI with a blue route, plum destination,
-  location sidebar, and university building preview.
-- `reading-room.png`: cream and terracotta book tracker with fictional book
-  covers and reading progress.
-- `one-more-level.png`: pixel game concept with a plum-cloaked adventurer,
-  lavender mountains, and stone platforms.
+```bash
+docker compose up -d --wait mysql
+bash scripts/setup.sh
+bash scripts/dev.sh
+```
 
-Replace these sample project images with actual screenshots when real exhibits
-are available. Keep attribution and material permissions with future exhibits.
+Compose keeps the database in a volume and binds it to localhost. On a native MySQL server, create the `afterpause` database account and run [the initialization SQL](scripts/init-mysql.sql) as a database administrator instead of starting Compose. The grants in that file use `'afterpause'@'%'` for the Compose network; use a local account host when configuring a native server and match the grant statements to it. The application account only needs access to the named Afterpause databases.
 
-## Reference-matched hero
+Use `.venv/bin/flask --app app db upgrade` after pulling migration changes. To grant an existing account moderator access, run `.venv/bin/flask --app app make-admin admin@example.test` with the correct database configuration. Registration cannot grant this role.
 
-The hero uses two additional image assets reconstructed from the approved
-screenshot with the built-in image tool: `hero-workspace-reference.png` keeps
-the camera at top centre, notebook at bottom left, and laptop at lower right;
-`campus-guide-reference.png` follows the simpler reference map preview.
-The header and hero include sign-in and sharing buttons. They open a clear
-preview availability notice until accounts and submissions are implemented.
+## Verification
+
+```bash
+# SQLite, even if a MySQL test URL is exported in the shell:
+TEST_DATABASE_URL= .venv/bin/python -m pytest -q
+# MySQL: supply a disposable, empty database ending in _test:
+TEST_DATABASE_URL='mysql+pymysql://USER:PASSWORD@127.0.0.1:3306/afterpause_test?charset=utf8mb4' \
+  .venv/bin/python -m pytest -q
+```
+
+The tests run migrations and clear records in the test database. They exercise the two account lifecycle, concurrent acceptance, rollback, draft and media privacy, authorisation, form validation, and moderation. GitHub Actions runs the checks on both engines. See [verification notes and screenshots](docs/verification.md) for the browser and recovery checks.
+
+## Deployment and recovery
+
+Use a persistent MySQL database and writable upload directory outside the application source. Set `APP_ENV=production`, a strong `SECRET_KEY`, and `DATABASE_URL` in the service environment. Run migrations before starting `.venv/bin/gunicorn --bind 127.0.0.1:8000 'app:create_app()'` behind an HTTPS reverse proxy. Configure the proxy to preserve the public host and to forward the HTTPS scheme from a trusted address. Do not enable Flask debug mode on a deployed instance. Rate limiting is local to each application process; use a shared edge limit if running multiple workers publicly.
+
+Pause application writes before backing up the database and media together. Set `MYSQL_OPTION_FILE` to a private MySQL client option file (chmod 600) with `[client]`, `host`, `port`, `user` and `password` entries. With MySQL client tools on PATH:
+
+```bash
+bash scripts/backup.sh afterpause_demo instance/demo-uploads museum-demo.tar.gz
+bash scripts/restore.sh afterpause_restore /path/to/empty/uploads museum-demo.tar.gz --confirm-restore
+```
+
+The destination database must already exist, be empty, and end in `_restore`. Use a trusted backup. See [recovery notes](docs/verification.md) for the restore check.
+
+## Team handoffs
+
+- [D1: Accounts and exhibit publishing](docs/accounts_and_publishing.md)
+- [D2: Museum exploration and presentation](docs/museum_and_exploration.md)
+- [D3: Continuations and moderation](docs/continuations_and_moderation.md)
+- [Demo content and walkthrough](docs/demo.md)
+- [Contributing](CONTRIBUTING.md) and [application license](LICENSE)
+
+The original static concept is preserved under `prototype/`. Its sample features are illustrative; start the Flask application for the working museum.

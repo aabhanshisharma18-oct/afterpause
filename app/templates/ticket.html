@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block title %}Exhibit ticket · {{ exhibit.title }} · Afterpause{% endblock %}
+{% block content %}
+<section class="shell section narrow">
+  <a class="back" href="{{ url_for('museum.exhibit', slug=exhibit.slug) }}">← Back to exhibit</a>
+  <article class="ticket">
+    <p class="eyebrow">Afterpause museum · Exhibit ticket</p>
+    <h1>{{ exhibit.title }}</h1>
+    <p class="lede">{{ exhibit.intention }}</p>
+    <p><strong>No. {{ '%03d'|format(exhibit.id) }}</strong> · Original work by {{ exhibit.owner.display_name }}{% if exhibit.is_demo %} · Demo{% endif %}</p>
+    <label class="field">Public exhibit link<input id="share-link" type="url" readonly value="{{ share_url }}"></label>
+    <div class="actions">
+      <a class="button" href="{{ url_for('museum.exhibit', slug=exhibit.slug) }}">View exhibit</a>
+      <button class="button secondary" type="button" data-copy-link hidden>Copy exhibit link</button>
+    </div>
+    <p class="small muted" data-copy-status role="status"></p>
+  </article>
+</section>
+{% endblock %}

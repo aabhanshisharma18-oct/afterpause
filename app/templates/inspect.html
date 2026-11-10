@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% from "_components.html" import picture, status with context %}
+{% block title %}Inspect exhibit · Afterpause{% endblock %}
+{% block content %}
+<section class="shell section">
+  <a class="back" href="{{ url_for('admin.reports') }}">← Moderation</a>
+  <p class="eyebrow">Private administrator view</p><h1>{{ exhibit.label }}</h1>
+  <p>Owner: {{ exhibit.owner.display_name }} · {{ exhibit.publication_state }} · {{ exhibit.review_state }}</p>
+  <p class="multiline">{{ exhibit.story }}</p>
+  <p><strong>Attribution:</strong> {{ exhibit.attribution }}</p>
+  {% if exhibit.media %}<div class="media-strip">{% for image in exhibit.media %}{{ picture(image) }}{% endfor %}</div>{% endif %}
+  <h2>Continuation requests</h2>
+  {% if not proposals %}<p>There are no requests.</p>{% endif %}
+  <div class="entry-list">
+  {% for item in proposals %}
+    <article class="entry">
+      {{ status(item.status) }}<h3>{{ item.applicant.display_name }}</h3>
+      <p class="multiline">{{ item.proposal }}</p><p><strong>Milestone:</strong> {{ item.milestone }}</p>
+      <p><strong>Materials:</strong> {{ item.materials }}</p>
+      {% if item.decision_note %}<p><strong>Private note:</strong> {{ item.decision_note }}</p>{% endif %}
+    </article>
+  {% endfor %}
+  </div>
+</section>
+{% endblock %}

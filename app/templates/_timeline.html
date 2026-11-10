@@ -1,0 +1,32 @@
+{% from "_components.html" import picture, date with context %}
+<section class="timeline-section" id="timeline">
+  <p class="eyebrow">The project lineage</p>
+  <h2>Chapters of this exhibit</h2>
+  {% if events.total == 0 %}<p class="muted">The first chapter will appear after publication.</p>{% endif %}
+  {% if events.total == 1 %}<p class="muted">The next chapter is waiting. Approved work will appear here.</p>{% endif %}
+  {% if events.items %}
+  <ol class="timeline" start="{{ (events.page - 1) * events.per_page + 1 }}">
+    {% for event in events.items %}
+    <li>
+      <div class="timeline-dot" aria-hidden="true"></div>
+      <div class="chapter">
+        <p class="eyebrow">{{ '%02d'|format(loop.index + (events.page - 1) * events.per_page) }} / {{ 'Original chapter' if event.event_type == 'original' else 'Approved contribution' if event.event_type == 'update' else 'Continuation' }}</p>
+        <h3>{{ event.title }}</h3>
+        <p class="chapter-credit">{{ event.actor_name }} <span>·</span> {{ date(event.created_at) }}</p>
+        {% if event.body %}<p class="multiline">{{ event.body }}</p>{% endif %}
+        {% if event.media %}{{ picture(event.media) }}{% endif %}
+        {% if event.next_step %}<p class="next-note"><strong>Next step</strong> {{ event.next_step }}</p>{% endif %}
+        {% if event.update and event.update.link %}<p><a href="{{ event.update.link }}" rel="nofollow ugc noopener">Contributor’s external link ↗</a> <small class="muted">(submitted by contributor)</small></p>{% endif %}
+      </div>
+    </li>
+    {% endfor %}
+  </ol>
+  {% endif %}
+  {% if events.pages > 1 %}
+    <nav class="pagination" aria-label="Timeline pages">
+      {% if events.has_prev %}<a href="?chapter={{ events.prev_num }}#timeline">← Previous chapters</a>{% endif %}
+      <span>Page {{ events.page }} of {{ events.pages }}</span>
+      {% if events.has_next %}<a href="?chapter={{ events.next_num }}#timeline">More chapters →</a>{% endif %}
+    </nav>
+  {% endif %}
+</section>
