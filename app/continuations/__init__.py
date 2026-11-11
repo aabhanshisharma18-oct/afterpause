@@ -28,6 +28,19 @@ def active(exhibit_id):
         Continuation.exhibit_id == exhibit_id, Continuation.active_slot == 1))
 
 
+def proposal_fields():
+    return dict(
+        proposal=value("proposal", "Proposal", 1400),
+        milestone=value("milestone", "First milestone", 240),
+        materials=value("materials", "Materials you will use", 400),
+    )
+
+
+def check_review_key(item):
+    if request.form.get("proposal_version") != item.review_key:
+        abort(409, "This proposal changed while you had it open. Reopen it to review the latest version.")
+
+
 @bp.route("/exhibits/<int:exhibit_id>/requests", methods=("GET", "POST"))
 @signed_in
 def request_continuation(exhibit_id):
@@ -42,8 +55,7 @@ def request_continuation(exhibit_id):
         abort(409, "You already have a pending request for this exhibit.")
     if request.method == "POST":
         try:
-            data = dict(proposal=value("proposal", "Proposal", 1400), milestone=value("milestone", "First milestone", 240),
-                        materials=value("materials", "Materials you will use", 400))
+            data = proposal_fields()
         except FormError as error:
             return render_template("proposal.html", exhibit=exhibit, error=error), 400
         once()
@@ -54,15 +66,46 @@ def request_continuation(exhibit_id):
     return render_template("proposal.html", exhibit=exhibit)
 
 
-def lock_request(proposal_id, *, owner=False, public=False):
+def lock_request(proposal_id, *, owner=False, applicant=False, public=False):
     exhibit_id = db.session.scalar(select(Proposal.exhibit_id).where(Proposal.id == proposal_id))
     if not exhibit_id:
         abort(404)
     exhibit = exhibit_for_write(exhibit_id, owner=owner, public=public)
     item = db.session.get(Proposal, proposal_id)
+    if applicant and item.applicant_id != g.user.id:
+        abort(403)
     if item.status != "pending":
         abort(409, "This request is no longer pending.")
     return exhibit, item
+
+
+@bp.route("/requests/<int:proposal_id>/edit", methods=("GET", "POST"))
+@signed_in
+def edit_request(proposal_id):
+    if request.method == "GET":
+        item = db.get_or_404(Proposal, proposal_id)
+        exhibit = item.exhibit
+        if not exhibit.is_public:
+            abort(404)
+        if item.applicant_id != g.user.id:
+            abort(403)
+        if item.status != "pending":
+            abort(409, "Only a pending proposal can be edited.")
+        return render_template("proposal.html", exhibit=exhibit, proposal=item)
+
+    exhibit, item = lock_request(proposal_id, applicant=True, public=True)
+    check_review_key(item)
+    try:
+        fields = proposal_fields()
+    except FormError as error:
+        return render_template("proposal.html", exhibit=exhibit, proposal=item, error=error), 400
+    once()
+    item.proposal = fields["proposal"]
+    item.milestone = fields["milestone"]
+    item.materials = fields["materials"]
+    db.session.commit()
+    flash("Proposal updated. It’s still waiting for the creator’s decision.", "success")
+    return redirect(url_for("museum.exhibit", slug=exhibit.slug, _anchor="invitation"), code=303)
 
 
 @bp.post("/requests/<int:proposal_id>/accept")
@@ -71,6 +114,7 @@ def accept(proposal_id):
     exhibit, item = lock_request(proposal_id, owner=True, public=True)
     if active(exhibit.id):
         abort(409, "This exhibit already has an active contributor.")
+    check_review_key(item)
     note = decision_note()
     once()
     resolve(item, "accepted", note)
@@ -95,6 +139,7 @@ def decision_note():
 @signed_in
 def decline(proposal_id):
     _, item = lock_request(proposal_id, owner=True)
+    check_review_key(item)
     note = decision_note()
     once()
     resolve(item, "declined", note)

@@ -1,6 +1,8 @@
 """Shared data model for the three Afterpause modules."""
 
 from datetime import datetime, timezone
+from hashlib import sha256
+import json
 
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import MetaData
@@ -122,6 +124,12 @@ class Proposal(Record, db.Model):
         db.CheckConstraint("(status = 'pending' AND pending_slot IS NOT NULL AND pending_slot = 1) OR "
                            "(status <> 'pending' AND pending_slot IS NULL)", name="request_pending_slot"),
     )
+
+    @property
+    def review_key(self):
+        """Identify the exact proposal text rendered in a decision or edit form."""
+        fields = json.dumps((self.proposal, self.milestone, self.materials))
+        return sha256(fields.encode("utf-8")).hexdigest()
 
 
 class Continuation(Record, db.Model):

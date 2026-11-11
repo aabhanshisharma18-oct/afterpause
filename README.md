@@ -27,7 +27,7 @@ bash scripts/demo.sh
 APP_ENV=demo bash scripts/dev.sh
 ```
 
-The seed asks for a password for `creator@example.test`, `contributor@example.test`, and `admin@example.test`. Rerunning it refreshes the demo passwords and fills missing fixtures without replacing existing exhibits. Demo mode uses a separate database and upload directory. Do not point it at a live database.
+The demo includes a ready-to-publish BorrowBox draft and a revised screenshot for the contributor. Follow the [classroom walkthrough](docs/demo.md) to show the entire lifecycle. The seed asks for a password for `creator@example.test`, `contributor@example.test`, and `admin@example.test`. Rerunning it refreshes the demo passwords and fills missing fixtures without replacing existing exhibits. Demo mode uses a separate database and upload directory. Do not point it at a live database.
 
 ## Linux and MySQL setup
 

@@ -2,36 +2,39 @@
 {% from "_components.html" import exhibit_card, pages with context %}
 {% block title %}Explore the rooms · Afterpause{% endblock %}
 {% block content %}
-<section class="shell section">
+<section class="shell section" data-gallery>
   <p class="eyebrow">The collection</p>
   <h1>Explore the rooms</h1>
   <p class="lede muted">Find an unfinished idea with a next step you can take.</p>
-  <nav class="tabs" aria-label="Museum rooms">
-    <a href="{{ filter_url(room='', page='') }}"{% if not filters.room %} aria-current="page"{% endif %}>All rooms</a>
-    {% for key, room in rooms.items() %}
-    <a href="{{ filter_url(room=key, page='') }}"{% if filters.room == key %} aria-current="page"{% endif %}>{{ room[0] }}</a>
-    {% endfor %}
-  </nav>
-  {% if filters.room %}<p class="room-description">{{ rooms[filters.room][1] }}</p>{% endif %}
-  <form class="filters" method="get" action="{{ url_for('museum.explore') }}" aria-label="Search and filter exhibits">
-    {% if filters.room %}<input type="hidden" name="room" value="{{ filters.room }}">{% endif %}
-    <label>Search exhibits<input type="search" name="q" maxlength="100" value="{{ filters.q }}" placeholder="Title, story or tag"></label>
-    <label>Category<select name="category"><option value="">Any category</option>{% for key, name in categories.items() %}<option value="{{ key }}"{% if filters.category == key %} selected{% endif %}>{{ name }}</option>{% endfor %}</select></label>
-    <label>Skill<input type="search" name="skill" maxlength="60" value="{{ filters.skill }}" placeholder="e.g. CSS"></label>
-    <label>Continuation<select name="state"><option value="">Any state</option>{% for key, name in states.items() %}<option value="{{ key }}"{% if filters.state == key %} selected{% endif %}>{{ name }}</option>{% endfor %}</select></label>
-    <button class="button">Apply filters</button>
-    {% if filters.q or filters.category or filters.skill or filters.state %}<a class="clear-filter" href="{{ url_for('museum.explore', room=filters.room) }}">Clear filters</a>{% endif %}
-  </form>
-  <p class="results muted">{{ page.total }} {{ 'exhibit' if page.total == 1 else 'exhibits' }}</p>
-  {% if page.items %}
-    <div class="card-grid">{% for exhibit in page.items %}{{ exhibit_card(exhibit) }}{% endfor %}</div>
-    {{ pages(page, filter_url_page) }}
-  {% else %}
-    <div class="empty">
-      <h2>{{ 'No exhibits match these filters.' if filters.q or filters.category or filters.skill or filters.state else 'This room is waiting for its first exhibit.' if filters.room else 'The museum is waiting for its first exhibit.' }}</h2>
-      <p>Browse all rooms or change your filters.</p>
-      <a class="button secondary" href="{{ url_for('museum.explore') }}">Show all exhibits</a>
-    </div>
-  {% endif %}
+  <p class="visually-hidden" data-gallery-status role="status"></p>
+  <div data-gallery-content>
+    <nav class="tabs" data-gallery-nav aria-label="Museum rooms">
+      <a href="{{ filter_url(room='', page='') }}"{% if not filters.room %} aria-current="page"{% endif %}>All rooms</a>
+      {% for key, room in rooms.items() %}
+      <a href="{{ filter_url(room=key, page='') }}"{% if filters.room == key %} aria-current="page"{% endif %}>{{ room[0] }}</a>
+      {% endfor %}
+    </nav>
+    {% if filters.room %}<p class="room-description">{{ rooms[filters.room][1] }}</p>{% endif %}
+    <form class="filters" method="get" action="{{ url_for('museum.explore') }}" aria-label="Search and filter exhibits">
+      {% if filters.room %}<input type="hidden" name="room" value="{{ filters.room }}">{% endif %}
+      <label>Search exhibits<input type="search" name="q" maxlength="100" value="{{ filters.q }}" placeholder="Title, story or tag"></label>
+      <label>Category<select name="category"><option value="">Any category</option>{% for key, name in categories.items() %}<option value="{{ key }}"{% if filters.category == key %} selected{% endif %}>{{ name }}</option>{% endfor %}</select></label>
+      <label>Skill<input type="search" name="skill" maxlength="60" value="{{ filters.skill }}" placeholder="e.g. CSS"></label>
+      <label>Continuation<select name="state"><option value="">Any state</option>{% for key, name in states.items() %}<option value="{{ key }}"{% if filters.state == key %} selected{% endif %}>{{ name }}</option>{% endfor %}</select></label>
+      <button class="button">Apply filters</button>
+      {% if filters.q or filters.category or filters.skill or filters.state %}<a class="clear-filter" data-gallery-link href="{{ url_for('museum.explore', room=filters.room) }}">Clear filters</a>{% endif %}
+    </form>
+    <p class="results muted" tabindex="-1" data-gallery-count>{{ page.total }} {{ 'exhibit' if page.total == 1 else 'exhibits' }}</p>
+    {% if page.items %}
+      <div class="card-grid">{% for exhibit in page.items %}{{ exhibit_card(exhibit) }}{% endfor %}</div>
+      <div data-gallery-nav data-gallery-pages>{{ pages(page, filter_url_page) }}</div>
+    {% else %}
+      <div class="empty">
+        <h2>{{ 'No exhibits match these filters.' if filters.q or filters.category or filters.skill or filters.state else 'This room is waiting for its first exhibit.' if filters.room else 'The museum is waiting for its first exhibit.' }}</h2>
+        <p>Browse all rooms or change your filters.</p>
+        <a class="button secondary" data-gallery-link href="{{ url_for('museum.explore') }}">Show all exhibits</a>
+      </div>
+    {% endif %}
+  </div>
 </section>
 {% endblock %}

@@ -1,6 +1,7 @@
 """Synthetic content for a repeatable, explicitly labelled classroom demo."""
 
 import io
+import json
 from pathlib import Path
 
 from flask import current_app
@@ -56,9 +57,8 @@ ITEMS = (
 )
 
 
-def preview_image(filename, label, index, *, revised=False):
-    if filename:
-        asset = Path(current_app.static_folder) / "images" / filename
+def preview_image(asset, label, index, *, revised=False):
+    if asset:
         with Image.open(asset) as source:
             image = ImageOps.fit(source.convert("RGB"), (1100, 730))
     else:
@@ -116,7 +116,8 @@ def populate(password):
                           is_demo=True, published_at=utcnow())
         db.session.add(exhibit)
         # One example has no cover to demonstrate the empty image state.
-        media = attach_image(preview_image(image, title, index), exhibit=exhibit) if index != 9 else None
+        asset = Path(current_app.static_folder) / "images" / image if image else None
+        media = attach_image(preview_image(asset, title, index), exhibit=exhibit) if index != 9 else None
         add_event(exhibit, creator, "original", "The original idea", body=intention,
                   next_step=next_step, media=media[0] if media else None)
         extra = None
@@ -145,7 +146,7 @@ def populate(password):
                                     next_step="Test the empty state.", review_status="approved",
                                     reviewed_by=creator.id, reviewed_at=utcnow())
                     db.session.add(update)
-                    extra = attach_image(preview_image(image, title, index, revised=True), update=update)
+                    extra = attach_image(preview_image(asset, title, index, revised=True), update=update)
                     add_event(exhibit, contributor, "update", update.title, body=update.body,
                               next_step=update.next_step, media=extra[0], update=update)
                     add_event(exhibit, contributor, "completed", "Milestone reached")
@@ -157,3 +158,26 @@ def populate(password):
     if not db.session.scalar(select(Exhibit.id).where(Exhibit.slug == "demo-private-draft")):
         db.session.add(Exhibit(slug="demo-private-draft", title="Private demo draft", owner=creator, is_demo=True))
         db.session.commit()
+
+
+    seed_borrowbox(creator)
+
+
+def seed_borrowbox(creator):
+    assets = Path(__file__).with_name("demo_assets")
+    fields = json.loads((assets / "borrowbox.json").read_text(encoding="utf-8"))
+    slug = "demo-borrowbox"
+    if db.session.scalar(select(Exhibit.id).where(
+        (Exhibit.slug == slug) | ((Exhibit.owner_id == creator.id) & (Exhibit.title == fields["title"]))
+    ).limit(1)):
+        return
+
+    description = fields.pop("alt_text")
+    tags = []
+    for name in fields.pop("tags").split(", "):
+        tag = db.session.scalar(select(Tag).where(Tag.name == name))
+        tags.append(tag or Tag(name=name))
+    exhibit = Exhibit(owner=creator, slug=slug, is_demo=True, share_confirmed=True, tags=tags, **fields)
+    db.session.add(exhibit)
+    content, _ = preview_image(assets / "borrowbox-before.png", exhibit.title, 0)
+    commit(attach_image((content, description), exhibit=exhibit))

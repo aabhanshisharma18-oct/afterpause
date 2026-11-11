@@ -1,9 +1,10 @@
 {% extends "base.html" %}
 {% from "_components.html" import picture, security, status, date with context %}
 {% set tabs = {'exhibits': 'My exhibits', 'requests': 'Creator requests', 'review': 'Updates awaiting review', 'my-requests': 'My requests', 'continuations': 'My continuations', 'saved': 'Saved exhibits'} %}
-{% macro decision(form_action, second_action, prompt, first, second, key) -%}
+{% macro decision(form_action, second_action, prompt, first, second, key, proposal_version=none) -%}
   <form method="post" class="decision-form" action="{{ form_action }}">
     {{ security() }}
+    {% if proposal_version %}<input type="hidden" name="proposal_version" value="{{ proposal_version }}">{% endif %}
     <label for="note-{{ key }}">{{ prompt }} (optional)</label>
     <textarea id="note-{{ key }}" name="note" rows="2" maxlength="400"></textarea>
     <div class="actions"><button class="button">{{ first }}</button><button class="button secondary" formaction="{{ second_action }}">{{ second }}</button></div>
@@ -64,10 +65,13 @@
       <p><strong>Materials:</strong> {{ item.materials }}</p>
       {% if item.decision_note %}<p class="private-note"><strong>Private decision note:</strong> {{ item.decision_note }}</p>{% endif %}
       {% if tab == 'requests' and item.status == 'pending' %}
-        {{ decision(url_for('continuations.accept', proposal_id=item.id), url_for('continuations.decline', proposal_id=item.id), 'Private decision note', 'Accept proposal', 'Decline proposal', item.id) }}
+        {{ decision(url_for('continuations.accept', proposal_id=item.id), url_for('continuations.decline', proposal_id=item.id), 'Private decision note', 'Accept proposal', 'Decline proposal', item.id, item.review_key) }}
         <p class="small muted">Accepting closes other pending requests for this exhibit.</p>
       {% elif tab == 'my-requests' and item.status == 'pending' %}
-        <form method="post" action="{{ url_for('continuations.withdraw_request', proposal_id=item.id) }}">{{ security() }}<button class="button secondary">Withdraw request</button></form>
+        <div class="actions">
+          {% if item.exhibit.is_public %}<a class="button" href="{{ url_for('continuations.edit_request', proposal_id=item.id) }}">Edit proposal</a>{% endif %}
+          <form method="post" action="{{ url_for('continuations.withdraw_request', proposal_id=item.id) }}">{{ security() }}<button class="button secondary">Withdraw request</button></form>
+        </div>
       {% endif %}
       {% if tab == 'requests' and item.continuation and item.continuation.status == 'active' %}
         <details><summary>Manage active continuation</summary>
