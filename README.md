@@ -13,6 +13,13 @@ bash scripts/dev.sh
 
 Open [http://127.0.0.1:8000](http://127.0.0.1:8000). A fresh install starts with an empty collection. The quick start uses SQLite; the project stack and concurrency acceptance target use **MySQL 8.4**, Flask, Jinja, SQLAlchemy and Alembic.
 
+The original `python -m flask --app afterpause run --debug` command also starts
+this integrated application on port 5000. Both entry points use the same models,
+templates, and migration history. Use a random `SECRET_KEY` of at least 32
+characters in `.env` so sessions can be verified across restarts. The setup
+script creates one on a fresh installation. Sessions expire after 12 hours of
+inactivity.
+
 For a separate labelled classroom demo:
 
 ```bash

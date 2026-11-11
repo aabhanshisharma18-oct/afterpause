@@ -27,16 +27,20 @@ def create_app(config=None):
         MAX_CONTENT_LENGTH=13 * 1024 * 1024,
         SESSION_COOKIE_HTTPONLY=True, SESSION_COOKIE_SAMESITE="Lax",
         SESSION_COOKIE_SECURE=mode == "production",
-        PERMANENT_SESSION_LIFETIME=86400,
+        PERMANENT_SESSION_LIFETIME=12 * 60 * 60,
     )
     if config:
         app.config.update(config)
     mode = app.config["APP_ENV"]
+    if not app.testing and len(app.config["SECRET_KEY"] or "") < 32:
+        raise RuntimeError("Set SECRET_KEY to a random secret of at least 32 characters. See README.md.")
     if mode == "production" and (
         len(app.config["SECRET_KEY"] or "") < 32 or not app.config["SQLALCHEMY_DATABASE_URI"].startswith("mysql+")
     ):
         raise RuntimeError("Production requires a strong SECRET_KEY and a MySQL DATABASE_URL.")
     app.config["SECRET_KEY"] = app.config["SECRET_KEY"] or secrets.token_hex(32)
+    if mode == "production":
+        app.config["SESSION_COOKIE_SECURE"] = True
     app.config["UPLOAD_DIR"] = Path(app.config["UPLOAD_DIR"]).resolve()
     Path(app.instance_path).mkdir(parents=True, exist_ok=True)
     if app.config["SQLALCHEMY_DATABASE_URI"].startswith("mysql"):
