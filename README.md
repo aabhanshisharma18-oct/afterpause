@@ -83,3 +83,5 @@ The original static concept is preserved under `prototype/`. Its sample features
 ## Container deployment
 
 See [production deployment](docs/deployment.md) for the Docker startup, persistent uploads, MySQL/Redis configuration, health checks and release steps.
+
+For a free demo using PostgreSQL and private cloud images, see [Render + Supabase setup](docs/free-deployment.md). Redis-compatible shared limits are supplied by Render Free Key Value.

@@ -160,18 +160,19 @@ def upload_path(storage_key):
 
 
 def commit(*uploads):
+    from . import storage
     created = []
     try:
         for upload in filter(None, uploads):
             media, content = upload
-            path = upload_path(media.storage_key)
-            path.parent.mkdir(parents=True, exist_ok=True)
-            with path.open("xb") as handle:
-                created.append(path)
-                handle.write(content)
+            storage.store(media.storage_key, content)
+            created.append(media.storage_key)
         db.session.commit()
     except BaseException:
         db.session.rollback()
-        for path in created:
-            path.unlink(missing_ok=True)
+        for key in created:
+            try:
+                storage.remove(key)
+            except Exception:
+                current_app.logger.error("Media rollback cleanup failed for %s", key)
         raise

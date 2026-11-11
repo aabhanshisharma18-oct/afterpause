@@ -7,7 +7,7 @@ from sqlalchemy.orm import selectinload
 from ..models import (Bookmark, CATEGORIES, Continuation, Exhibit, Media, PAUSE_REASONS, PERMISSIONS,
                       Proposal, ROOMS, Tag, Update, db, utcnow)
 from ..services import (FormError, add_event, attach_image, can_preview, commit, exhibit_for_write, external_link,
-                        once, option, read_image, signed_in, upload_path, value, visible_exhibits)
+                        once, option, read_image, signed_in, value, visible_exhibits)
 
 bp = Blueprint("exhibits", __name__)
 
@@ -158,9 +158,8 @@ def media(storage_key):
             abort(404)
     elif not exhibit.is_public and not can_preview(exhibit):
         abort(404)
-    path = upload_path(storage_key)
-    if not path.is_file():
-        abort(404)
+    from ..storage import read
+    path = read(storage_key)
     return send_file(path, mimetype="image/webp", download_name="exhibit-image.webp")
 
 

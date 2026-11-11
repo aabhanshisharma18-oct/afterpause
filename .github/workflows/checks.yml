@@ -45,3 +45,28 @@ jobs:
             echo "Production container unexpectedly started without secrets"
             exit 1
           fi
+
+  postgres:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: afterpause
+          POSTGRES_PASSWORD: local_ci_only
+          POSTGRES_DB: afterpause_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U afterpause -d afterpause_test"
+          --health-interval=5s --health-timeout=5s --health-retries=20
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: python -m pip install -r requirements-dev.txt
+      - run: python -m pytest -q
+        env:
+          TEST_DATABASE_URL: postgresql+psycopg://afterpause:local_ci_only@127.0.0.1:5432/afterpause_test

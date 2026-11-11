@@ -36,9 +36,20 @@ def create_app(config=None):
         PERMANENT_SESSION_LIFETIME=12 * 60 * 60,
         PROXY_HOPS=int(os.getenv("PROXY_HOPS", "0")),
     )
+    app.config.update(
+        MEDIA_STORAGE=os.getenv("MEDIA_STORAGE", "local"),
+        SUPABASE_URL=os.getenv("SUPABASE_URL", ""),
+        SUPABASE_SERVICE_KEY=os.getenv("SUPABASE_SERVICE_KEY", ""),
+        SUPABASE_BUCKET=os.getenv("SUPABASE_BUCKET", "afterpause-media"),
+    )
     if config:
         app.config.update(config)
     mode = app.config["APP_ENV"]
+    uri = app.config["SQLALCHEMY_DATABASE_URI"]
+    if uri.startswith(("postgres://", "postgresql://")):
+        app.config["SQLALCHEMY_DATABASE_URI"] = "postgresql+psycopg://" + uri.split("://", 1)[1]
+    from .storage import validate_storage
+    validate_storage(app.config)
     if app.config["PROXY_HOPS"] not in (0, 1):
         raise RuntimeError("PROXY_HOPS must be 0 or 1; enable only behind one trusted proxy.")
     if app.config["PROXY_HOPS"]:
@@ -46,9 +57,9 @@ def create_app(config=None):
     if not app.testing and len(app.config["SECRET_KEY"] or "") < 32:
         raise RuntimeError("Set SECRET_KEY to a random secret of at least 32 characters. See README.md.")
     if mode == "production" and (
-        len(app.config["SECRET_KEY"] or "") < 32 or not app.config["SQLALCHEMY_DATABASE_URI"].startswith("mysql+")
+        len(app.config["SECRET_KEY"] or "") < 32 or not app.config["SQLALCHEMY_DATABASE_URI"].startswith(("mysql+", "postgresql+psycopg://"))
     ):
-        raise RuntimeError("Production requires a strong SECRET_KEY and a MySQL DATABASE_URL.")
+        raise RuntimeError("Production requires a strong SECRET_KEY and a MySQL or PostgreSQL DATABASE_URL.")
     app.config["SECRET_KEY"] = app.config["SECRET_KEY"] or secrets.token_hex(32)
     if mode == "production":
         app.config["SESSION_COOKIE_SECURE"] = True
@@ -61,6 +72,11 @@ def create_app(config=None):
     if app.config["SQLALCHEMY_DATABASE_URI"].startswith("mysql"):
         app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
             "pool_pre_ping": True, "pool_recycle": 1800, "isolation_level": "READ COMMITTED",
+        }
+    if app.config["SQLALCHEMY_DATABASE_URI"].startswith("postgresql"):
+        app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
+            "pool_pre_ping": True, "pool_recycle": 1800, "pool_size": 2, "max_overflow": 1,
+            "connect_args": {"connect_timeout": 10},
         }
     db.init_app(app)
     with app.app_context():
@@ -145,10 +161,11 @@ def create_app(config=None):
     @app.errorhandler(409)
     @app.errorhandler(413)
     @app.errorhandler(429)
+    @app.errorhandler(503)
     def http_error(error):
         titles = {400: "Check this submission", 403: "Access denied", 404: "This page is unavailable",
                   409: "This action is no longer available", 413: "The upload is too large",
-                  429: "Too many attempts"}
+                  429: "Too many attempts", 503: "Service temporarily unavailable"}
         return render_template("error.html", code=error.code, title=titles[error.code],
                                detail=error.description), error.code
 

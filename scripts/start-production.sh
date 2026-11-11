@@ -1,9 +1,9 @@
 #!/bin/sh
 set -eu
 : "${SECRET_KEY:?Set a persistent random SECRET_KEY of at least 32 characters}"
-: "${DATABASE_URL:?Set a mysql+pymysql DATABASE_URL}"
+: "${DATABASE_URL:?Set a MySQL or PostgreSQL DATABASE_URL}"
 : "${RATELIMIT_STORAGE_URI:?Set a shared Redis URL}"
-: "${UPLOAD_DIR:?Set UPLOAD_DIR on a persistent volume}"
+: "${UPLOAD_DIR:?Set UPLOAD_DIR (persistent volume for local media)}"
 export APP_ENV=production
 mkdir -p "$UPLOAD_DIR"
 test -w "$UPLOAD_DIR" || { echo "UPLOAD_DIR is not writable" >&2; exit 1; }
