@@ -30,3 +30,18 @@ jobs:
         run: python -m pytest -q
         env:
           TEST_DATABASE_URL: mysql+pymysql://afterpause:local_ci_only@127.0.0.1:3306/afterpause_test?charset=utf8mb4
+
+  container:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Validate production startup script
+        run: sh -n scripts/start-production.sh
+      - name: Build production image
+        run: docker build --tag afterpause:check .
+      - name: Reject missing production configuration
+        run: |
+          if docker run --rm afterpause:check; then
+            echo "Production container unexpectedly started without secrets"
+            exit 1
+          fi

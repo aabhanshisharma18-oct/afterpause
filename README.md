@@ -79,3 +79,7 @@ The destination database must already exist, be empty, and end in `_restore`. Us
 - [Contributing](CONTRIBUTING.md) and [application license](LICENSE)
 
 The original static concept is preserved under `prototype/`. Its sample features are illustrative; start the Flask application for the working museum.
+
+## Container deployment
+
+See [production deployment](docs/deployment.md) for the Docker startup, persistent uploads, MySQL/Redis configuration, health checks and release steps.

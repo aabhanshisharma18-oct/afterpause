@@ -9,6 +9,8 @@ from limits.storage import MemoryStorage, storage_from_string
 from limits.strategies import MovingWindowRateLimiter
 from sqlalchemy import event
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy import text
+from werkzeug.middleware.proxy_fix import ProxyFix
 
 from .models import CATEGORIES, PAUSE_REASONS, PERMISSIONS, ROOMS, STATES, User, db
 from .services import MAX_IMAGE
@@ -32,10 +34,15 @@ def create_app(config=None):
         SESSION_COOKIE_HTTPONLY=True, SESSION_COOKIE_SAMESITE="Lax",
         SESSION_COOKIE_SECURE=mode == "production",
         PERMANENT_SESSION_LIFETIME=12 * 60 * 60,
+        PROXY_HOPS=int(os.getenv("PROXY_HOPS", "0")),
     )
     if config:
         app.config.update(config)
     mode = app.config["APP_ENV"]
+    if app.config["PROXY_HOPS"] not in (0, 1):
+        raise RuntimeError("PROXY_HOPS must be 0 or 1; enable only behind one trusted proxy.")
+    if app.config["PROXY_HOPS"]:
+        app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1)
     if not app.testing and len(app.config["SECRET_KEY"] or "") < 32:
         raise RuntimeError("Set SECRET_KEY to a random secret of at least 32 characters. See README.md.")
     if mode == "production" and (
@@ -75,8 +82,27 @@ def create_app(config=None):
         app.register_blueprint(bp)
     register_commands(app)
 
+    @app.get("/healthz")
+    def health():
+        return {"status": "ok"}
+
+    @app.get("/readyz")
+    def ready():
+        try:
+            db.session.execute(text("SELECT 1 FROM rooms LIMIT 1"))
+            if not limit_storage.check():
+                raise RuntimeError("Rate limit storage unavailable")
+        except Exception:
+            db.session.rollback()
+            app.logger.exception("Readiness check failed")
+            return {"status": "unavailable"}, 503
+        return {"status": "ready"}
+
     @app.before_request
     def load_user():
+        if request.endpoint in {"health", "ready"}:
+            g.user = None
+            return
         user_id = session.get("user_id")
         g.user = db.session.get(User, user_id) if user_id is not None else None
 

@@ -1,0 +1,14 @@
+.git
+.env
+.env.*
+!.env.example
+.venv
+venv
+__pycache__
+.pytest_cache
+*.pyc
+instance
+*.tar.gz
+prototype
+tests
+docs/screenshots
