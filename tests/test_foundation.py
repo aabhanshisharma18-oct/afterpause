@@ -23,6 +23,7 @@ def test_startup_rejects_missing_or_placeholder_session_secrets(tmp_path, secret
 def test_session_lifetime_and_secure_production_configuration(tmp_path):
     app = create_app({
         "APP_ENV": "production",
+        "RATELIMIT_STORAGE_URI": "redis://127.0.0.1:6379/0",
         "SECRET_KEY": "a-random-session-secret-with-at-least-32-characters",
         "SQLALCHEMY_DATABASE_URI": "mysql+pymysql://example@127.0.0.1/afterpause_test",
         "UPLOAD_DIR": tmp_path,

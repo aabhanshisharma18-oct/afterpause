@@ -5,6 +5,8 @@ import secrets
 from flask import Flask, g, render_template, request, session
 from flask_migrate import Migrate
 from flask_wtf.csrf import CSRFError, CSRFProtect
+from limits.storage import MemoryStorage, storage_from_string
+from limits.strategies import MovingWindowRateLimiter
 from sqlalchemy import event
 from sqlalchemy.exc import IntegrityError
 
@@ -20,6 +22,7 @@ def create_app(config=None):
     database = os.getenv("DEMO_DATABASE_URL" if mode == "demo" else "DATABASE_URL")
     app.config.update(
         SECRET_KEY=os.getenv("SECRET_KEY"), APP_ENV=mode,
+        RATELIMIT_STORAGE_URI=os.getenv("RATELIMIT_STORAGE_URI") or "memory://",
         SQLALCHEMY_DATABASE_URI=database or ("sqlite:///demo.sqlite3" if mode == "demo" else "sqlite:///museum.sqlite3"),
         SQLALCHEMY_TRACK_MODIFICATIONS=False,
         UPLOAD_DIR=os.getenv("DEMO_UPLOAD_DIR" if mode == "demo" else "UPLOAD_DIR") or
@@ -41,6 +44,10 @@ def create_app(config=None):
     app.config["SECRET_KEY"] = app.config["SECRET_KEY"] or secrets.token_hex(32)
     if mode == "production":
         app.config["SESSION_COOKIE_SECURE"] = True
+    limit_storage = storage_from_string(app.config["RATELIMIT_STORAGE_URI"] or "memory://")
+    if mode == "production" and isinstance(limit_storage, MemoryStorage):
+        raise RuntimeError("Production requires a shared RATELIMIT_STORAGE_URI, such as a Redis URL.")
+    app.extensions["auth_limiter"] = MovingWindowRateLimiter(limit_storage)
     app.config["UPLOAD_DIR"] = Path(app.config["UPLOAD_DIR"]).resolve()
     Path(app.instance_path).mkdir(parents=True, exist_ok=True)
     if app.config["SQLALCHEMY_DATABASE_URI"].startswith("mysql"):

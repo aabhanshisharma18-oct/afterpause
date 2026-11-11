@@ -14,7 +14,7 @@
   {% endif %}
 {%- endmacro %}
 
-{% macro field(name, label, existing='', limit=100, type='text', required=true, help='', choices=none, error=none, autocomplete=none) -%}
+{% macro field(name, label, existing='', limit=100, type='text', required=true, help='', choices=none, error=none, autocomplete=none, min_length=8) -%}
   {% set entered = request.form.get(name, '') if request.method == 'POST' else existing %}
   {% set invalid = error and error.field == name %}
   <div class="field">
@@ -33,7 +33,7 @@
     {% elif type == 'file' %}
       <input {{ attrs|safe }} type="file" accept="image/png,image/jpeg,image/webp">
     {% else %}
-      <input {{ attrs|safe }} type="{{ type }}" maxlength="{{ limit }}"{% if type != 'password' %} value="{{ entered or '' }}"{% else %} minlength="8"{% endif %}{% if autocomplete %} autocomplete="{{ autocomplete }}"{% endif %}>
+      <input {{ attrs|safe }} type="{{ type }}" maxlength="{{ limit }}"{% if type != 'password' %} value="{{ entered or '' }}"{% else %} minlength="{{ min_length }}"{% endif %}{% if autocomplete %} autocomplete="{{ autocomplete }}"{% endif %}>
     {% endif %}
     {% if invalid %}<p class="field-error" id="{{ name }}-error" role="alert">{{ error }}</p>{% endif %}
   </div>

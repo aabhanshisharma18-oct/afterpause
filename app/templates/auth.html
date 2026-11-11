@@ -11,7 +11,8 @@
     {{ security(false) }}
     {% if joining %}{{ field('display_name', 'Display name', limit=70, error=error, autocomplete='nickname', help='This is the name shown with your work.') }}{% endif %}
     {{ field('email', 'Email address', limit=254, type='email', error=error, autocomplete='username') }}
-    {{ field('password', 'Password', limit=128, type='password', error=error, autocomplete='new-password' if joining else 'current-password', help='At least 8 characters.' if joining else '') }}
+    {{ field('password', 'Password', limit=128, type='password', error=error, autocomplete='new-password' if joining else 'current-password', min_length=12 if joining else 1, help='Use 12 to 128 characters.' if joining else '') }}
+    {% if joining %}{{ field('confirm_password', 'Confirm password', limit=128, type='password', error=error, autocomplete='new-password', min_length=12) }}{% endif %}
     <button class="button">{{ 'Create account' if joining else 'Sign in' }}</button>
   </form>
   <p>{{ 'Already have an account?' if joining else 'New to Afterpause?' }} <a href="{{ url_for('auth.login' if joining else 'auth.register', next=request.args.get('next', '')) }}">{{ 'Sign in' if joining else 'Create an account' }}</a></p>

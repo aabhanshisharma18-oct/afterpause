@@ -20,7 +20,7 @@
         {% if request.endpoint == 'museum.entrance' %}<a href="#how-it-works">How it works</a>{% endif %}
         {% if g.user %}
           <a href="{{ url_for('exhibits.dashboard') }}"{% if request.endpoint == 'exhibits.dashboard' %} aria-current="page"{% endif %}>Dashboard</a>
-          <a href="{{ url_for('auth.profile') }}">Profile</a>
+          <a href="{{ url_for('auth.account') }}">My account</a>
           {% if g.user.role == 'admin' %}<a href="{{ url_for('admin.reports') }}">Moderation</a>{% endif %}
           <form method="post" action="{{ url_for('auth.logout') }}">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">

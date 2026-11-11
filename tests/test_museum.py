@@ -207,7 +207,7 @@ def test_registration_profile_and_rate_limit(app):
     app.config["TEST_RATE_LIMIT"] = True
     guest = app.test_client()
     token = csrf(guest, "/auth/login")
-    for _ in range(10):
+    for _ in range(5):
         assert post(guest, "/auth/login", {"email": "wrong@example.test", "password": "incorrect123"},
                     csrf_token=token).status_code == 400
     assert post(guest, "/auth/login", {"email": "wrong@example.test", "password": "incorrect123"},

@@ -21,4 +21,4 @@ All screenshots use labelled sample records.
 
 ## Known limitations
 
-Afterpause accepts image uploads and external links. It does not execute project code, validate external commits, or send email. Login throttling is per application process. Account recovery, multi-contributor work, live chat, and OAuth are deferred. The browser check is not a substitute for a classroom usability session with actual participants.
+Afterpause accepts image uploads and external links. It does not execute project code, validate external commits, or send email. Local credential limits use process memory; production requires shared storage. Account recovery, multi-contributor work, live chat, and OAuth are deferred. The browser check is not a substitute for a classroom usability session with actual participants.

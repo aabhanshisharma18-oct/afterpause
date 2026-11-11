@@ -59,7 +59,7 @@ The tests run migrations and clear records in the test database. They exercise t
 
 ## Deployment and recovery
 
-Use a persistent MySQL database and writable upload directory outside the application source. Set `APP_ENV=production`, a strong `SECRET_KEY`, and `DATABASE_URL` in the service environment. Run migrations before starting `.venv/bin/gunicorn --bind 127.0.0.1:8000 'app:create_app()'` behind an HTTPS reverse proxy. Configure the proxy to preserve the public host and to forward the HTTPS scheme from a trusted address. Do not enable Flask debug mode on a deployed instance. Rate limiting is local to each application process; use a shared edge limit if running multiple workers publicly.
+Use a persistent MySQL database and writable upload directory outside the application source. Set `APP_ENV=production`, a strong `SECRET_KEY`, `DATABASE_URL`, and a shared `RATELIMIT_STORAGE_URI` such as `redis://127.0.0.1:6379/0` in the service environment. Run migrations before starting `.venv/bin/gunicorn --bind 127.0.0.1:8000 'app:create_app()'` behind an HTTPS reverse proxy. Configure the proxy to preserve the public host and to forward the HTTPS scheme from a trusted address. Configure trusted proxy handling for accurate client IP limits. Do not enable Flask debug mode on a deployed instance. Development and demo modes default to in-memory limits that reset on restart.
 
 Pause application writes before backing up the database and media together. Set `MYSQL_OPTION_FILE` to a private MySQL client option file (chmod 600) with `[client]`, `host`, `port`, `user` and `password` entries. With MySQL client tools on PATH:
 

@@ -21,6 +21,7 @@ def app(tmp_path):
         pytest.fail("TEST_DATABASE_URL must refer to a disposable database ending in _test.")
     config = {
         "APP_ENV": "test", "TESTING": True, "SECRET_KEY": "test-session-only",
+        "RATELIMIT_STORAGE_URI": "memory://",
         "SQLALCHEMY_DATABASE_URI": url, "UPLOAD_DIR": tmp_path / "uploads",
     }
     app = create_app(config)
@@ -51,6 +52,7 @@ def register(app, name):
     client = app.test_client()
     response = post(client, "/auth/register", dict(
         email=f"{name.lower()}@example.test", display_name=name, password="museum-testing-123",
+        confirm_password="museum-testing-123",
     ), csrf_token=csrf(client, "/auth/register"))
     assert response.status_code == 303
     return client
