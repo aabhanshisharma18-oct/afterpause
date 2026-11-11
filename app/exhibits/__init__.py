@@ -2,7 +2,7 @@ from uuid import uuid4
 
 from flask import Blueprint, abort, flash, g, redirect, render_template, request, send_file, url_for
 from sqlalchemy import func, select
-from sqlalchemy.orm import joinedload
+from sqlalchemy.orm import selectinload
 
 from ..models import (Bookmark, CATEGORIES, Continuation, Exhibit, Media, PAUSE_REASONS, PERMISSIONS,
                       Proposal, ROOMS, Tag, Update, db, utcnow)
@@ -29,16 +29,18 @@ def create():
     return redirect(url_for(".edit", exhibit_id=exhibit.id), code=303)
 
 
-def read_step(exhibit, step):
+def read_step(exhibit, step, *, partial=False):
     if step == 1:
         return dict(
-            title=value("title", "Title", 100), intention=value("intention", "One-sentence intention", 180),
-            story=value("story", "Project story", 2400), room_id=option("room_id", "Room", ROOMS),
-            category=option("category", "Category", CATEGORIES),
+            title=value("title", "Title", 100, required=not partial),
+            intention=value("intention", "One-sentence intention", 180, required=not partial),
+            story=value("story", "Project story", 2400, required=not partial),
+            room_id=option("room_id", "Room", ROOMS, required=not partial) or None,
+            category=option("category", "Category", CATEGORIES, required=not partial),
         ), []
     if step == 2:
         details = dict(
-            current_work=value("current_work", "What exists", 1600),
+            current_work=value("current_work", "What exists", 1600, required=not partial),
             pause_reason=option("pause_reason", "Pause reason", PAUSE_REASONS, required=False),
             pause_note=value("pause_note", "Pause note", 600, required=False),
             repository_url=external_link("repository_url", "Repository link"),
@@ -49,13 +51,14 @@ def read_step(exhibit, step):
             raise FormError("image", "An exhibit can contain up to four images.")
         return details, images
     details = dict(
-        next_step=value("next_step", "Next step", 240), skills=value("skills", "Skills", 160, required=False),
+        next_step=value("next_step", "Next step", 240, required=not partial),
+        skills=value("skills", "Skills", 160, required=False),
         task_size=value("task_size", "Task size", 40, required=False),
-        attribution=value("attribution", "Creator credit", 240),
-        permissions=option("permissions", "Material permissions", PERMISSIONS),
+        attribution=value("attribution", "Creator credit", 240, required=not partial),
+        permissions=option("permissions", "Material permissions", PERMISSIONS, required=not partial),
         share_confirmed=request.form.get("share_confirmed") == "yes",
     )
-    if not details["share_confirmed"]:
+    if not details["share_confirmed"] and not partial:
         raise FormError("share_confirmed", "Confirm that you can share the work and images.")
     raw = value("tags", "Tags", 160, required=False).casefold()
     names = sorted({name.strip() for name in raw.split(",") if name.strip()})
@@ -79,7 +82,8 @@ def edit(exhibit_id):
     exhibit = owned(exhibit_id) if request.method == "GET" else exhibit_for_write(exhibit_id, owner=True)
     if request.method == "POST":
         try:
-            fields, images = read_step(exhibit, step)
+            partial = exhibit.publication_state == "draft" and request.form.get("destination") == "dashboard"
+            fields, images = read_step(exhibit, step, partial=partial)
         except FormError as error:
             return render_template("wizard.html", exhibit=exhibit, step=step, error=error), 400
         once()
@@ -115,10 +119,7 @@ def publish(exhibit_id):
         abort(409, "An administrator must clear the visibility restriction before this exhibit can be published.")
     if exhibit.publication_state == "published":
         abort(409, "This exhibit is already published.")
-    fields = (exhibit.title, exhibit.intention, exhibit.story, exhibit.room_id, exhibit.category,
-              exhibit.current_work, exhibit.next_step, exhibit.attribution, exhibit.permissions,
-              exhibit.share_confirmed, exhibit.media)
-    if not all(fields):
+    if not exhibit.submission_progress["ready"]:
         flash("Complete all three steps and add a cover image before publishing.", "error")
         return redirect(url_for(".preview", exhibit_id=exhibit.id), code=303)
     once()
@@ -169,7 +170,8 @@ def dashboard():
     tab = request.args.get("tab", "exhibits")
     entries = []
     if tab == "exhibits":
-        entries = db.session.scalars(select(Exhibit).where(Exhibit.owner_id == owner).order_by(Exhibit.id.desc()))
+        entries = db.session.scalars(select(Exhibit).where(Exhibit.owner_id == owner)
+                                     .options(selectinload(Exhibit.media)).order_by(Exhibit.id.desc()))
     elif tab in {"requests", "my-requests"}:
         where = Exhibit.owner_id == owner if tab == "requests" else Proposal.applicant_id == owner
         entries = db.session.scalars(select(Proposal).join(Exhibit).where(where).order_by(Proposal.id.desc()))

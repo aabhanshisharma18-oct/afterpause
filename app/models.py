@@ -104,6 +104,20 @@ class Exhibit(Record, db.Model):
     def label(self):
         return self.title or "Untitled draft"
 
+    @property
+    def submission_progress(self):
+        requirements = (
+            (self.title, self.intention, self.story, self.room_id, self.category),
+            (self.current_work, self.media),
+            (self.next_step, self.attribution, self.permissions, self.share_confirmed),
+        )
+        completed = [number for number, fields in enumerate(requirements, 1) if all(fields)]
+        return {
+            "completed_steps": completed,
+            "resume_step": next((number for number in (1, 2, 3) if number not in completed), 3),
+            "ready": len(completed) == 3,
+        }
+
 
 class Proposal(Record, db.Model):
     __tablename__ = "requests"
