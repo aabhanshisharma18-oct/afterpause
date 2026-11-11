@@ -1,15 +1,16 @@
 {% extends "base.html" %}
-{% from "_components.html" import picture, status, security, date with context %}
+{% from "_components.html" import draft_progress, picture, status, security, date with context %}
 {% block title %}{{ exhibit.label }} · Afterpause{% endblock %}
 {% block content %}
 <article class="shell section exhibit">
   {% if preview %}
     <aside class="notice">
       <strong>Owner preview.</strong> Review how visitors will see the exhibit. Current visibility: {{ exhibit.publication_state }}{% if exhibit.moderation_hidden %}, hidden by moderation{% endif %}.
+      {% if not exhibit.is_public %}{{ draft_progress(exhibit, links=true) }}{% endif %}
       <div class="actions">
         <a href="{{ url_for('exhibits.edit', exhibit_id=exhibit.id) }}">Edit exhibit</a>
         {% if not exhibit.is_public and not exhibit.moderation_hidden %}
-        <form method="post" action="{{ url_for('exhibits.publish', exhibit_id=exhibit.id) }}">{{ security() }}<button class="button">Publish exhibit</button></form>
+        <form method="post" action="{{ url_for('exhibits.publish', exhibit_id=exhibit.id) }}">{{ security() }}<button class="button"{% if not exhibit.submission_progress.ready %} disabled{% endif %}>Publish exhibit</button></form>
         {% elif exhibit.is_public %}
         <a class="button secondary" href="{{ url_for('museum.exhibit', slug=exhibit.slug) }}">View public exhibit</a>
         {% endif %}

@@ -1,4 +1,5 @@
 import io
+import re
 from uuid import uuid4
 
 import pytest
@@ -6,7 +7,7 @@ from sqlalchemy import func, select
 
 from app import create_app
 from app.models import Exhibit, Media, TimelineEvent, db
-from conftest import log_in, post, publish, register
+from conftest import draft, log_in, post, publish, register, screenshot
 
 
 def empty_draft(owner):
@@ -100,3 +101,42 @@ def test_partial_save_cannot_clear_required_fields_of_published_exhibits(app):
         assert exhibit.publication_state == "published"
         assert exhibit.submission_progress["ready"] is True
     assert b"Campus Navigation" in app.test_client().get(public).data
+
+
+def test_dashboard_resume_and_preview_follow_saved_progress(app):
+    owner = register(app, "Owner")
+    item_id, edit = draft(owner)
+    dashboard = owner.get("/dashboard").get_data(as_text=True)
+    assert "1 of 3 sections ready to publish" in dashboard
+    assert f'href="{edit}?step=2">Reopen draft</a>' in dashboard
+    wizard = owner.get(f"{edit}?step=2").get_data(as_text=True)
+    save_button = re.search(r'<button\b[^>]*name="destination"[^>]*>', wizard).group()
+    assert "formnovalidate" in save_button
+    assert "Save draft and exit" in wizard
+    assert post(owner, f"{edit}?step=2", {
+        "current_work": "A desktop interface", "image": screenshot(),
+        "alt_text": "The desktop interface", "destination": "dashboard",
+    }).status_code == 303
+    dashboard = owner.get("/dashboard").get_data(as_text=True)
+    assert "2 of 3 sections ready to publish" in dashboard
+    assert f'href="{edit}?step=3">Reopen draft</a>' in dashboard
+    assert post(owner, f"{edit}?step=3", {
+        "next_step": "Add a mobile screen", "destination": "dashboard",
+    }).status_code == 303
+    preview = owner.get(f"/exhibits/{item_id}/preview").get_data(as_text=True)
+    publish_button = re.search(r'<button\b[^>]*>Publish exhibit</button>', preview).group()
+    assert "disabled" in publish_button
+    assert f'href="{edit}?step=3"' in preview
+    assert post(owner, f"{edit}?step=3", {
+        "next_step": "Add a mobile screen", "attribution": "Original work by Owner",
+        "permissions": "ask", "share_confirmed": "yes",
+    }).status_code == 303
+    dashboard = owner.get("/dashboard").get_data(as_text=True)
+    assert "3 of 3 sections ready to publish" in dashboard
+    preview = owner.get(f"/exhibits/{item_id}/preview").get_data(as_text=True)
+    publish_button = re.search(r'<button\b[^>]*>Publish exhibit</button>', preview).group()
+    assert "disabled" not in publish_button
+    assert post(owner, f"/exhibits/{item_id}/publish").status_code == 303
+    published_form = owner.get(edit).get_data(as_text=True)
+    save_button = re.search(r'<button\b[^>]*name="destination"[^>]*>', published_form).group()
+    assert "formnovalidate" not in save_button

@@ -76,6 +76,21 @@
   <time datetime="{{ value.isoformat() }}Z">{{ value.strftime('%d %b %Y') }}</time>
 {%- endmacro %}
 
+{% macro draft_progress(exhibit, links=false) -%}
+  {% set progress = exhibit.submission_progress %}
+  <div class="draft-progress">
+    <p class="small">{{ progress.completed_steps|length }} of 3 sections ready to publish.</p>
+    <progress value="{{ progress.completed_steps|length }}" max="3" aria-label="Sections ready to publish">{{ progress.completed_steps|length }} of 3</progress>
+    {% if links and not progress.ready %}
+      <p class="small">Finish
+      {% for number, title in {1: 'the idea', 2: 'the current work and cover', 3: 'the invitation and permissions'}.items() if number not in progress.completed_steps %}
+        <a href="{{ url_for('exhibits.edit', exhibit_id=exhibit.id, step=number) }}">{{ title }}</a>{% if not loop.last %}, {% endif %}
+      {% endfor %}
+      before publishing.</p>
+    {% endif %}
+  </div>
+{%- endmacro %}
+
 {% macro pages(page, href, name='Results') -%}
   {% if page.pages > 1 %}
     <nav class="pagination" aria-label="{{ name }} pages">

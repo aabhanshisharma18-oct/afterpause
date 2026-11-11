@@ -268,3 +268,7 @@ summary { cursor: pointer; color: var(--plum-dark); text-decoration: underline; 
 .upload-preview { margin: .7rem 0 0; padding: .7rem; border: 1px solid var(--line); border-radius: .3rem; background: var(--ivory); }
 .upload-preview img { display: block; width: auto; max-width: 100%; max-height: 13rem; margin-bottom: .55rem; border-radius: .2rem; }
 .upload-preview figcaption { overflow-wrap: anywhere; font-size: .85rem; }
+.draft-progress { margin-block: 1rem; }
+.draft-progress p { margin-block: .4rem; }
+.draft-progress progress { display: block; width: min(100%, 24rem); height: .7rem; accent-color: var(--plum); }
+.button:disabled { opacity: .55; cursor: default; }

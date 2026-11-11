@@ -89,6 +89,7 @@ def edit(exhibit_id):
         once()
         for key, data in fields.items():
             setattr(exhibit, key, data)
+        exhibit.updated_at = utcnow()
         if step == 1 and exhibit.published_at is None:
             # The URL is immutable after the first publication.
             import re

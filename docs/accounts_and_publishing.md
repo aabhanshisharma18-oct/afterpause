@@ -12,6 +12,17 @@ D1 owns the Flask application factory, authentication, the exhibit write path, u
 
 Start a draft from the dashboard. The three steps save the idea, current work and invitation independently. Return to a saved draft, preview it, and publish once the required fields, material confirmation and cover are present. Additional images can be appended, up to four in total. The pause reason and explanation are optional. Uploaded files must be reselected after a validation error; browsers do not restore file inputs.
 
+In an unpublished draft, **Save draft and exit** accepts an incomplete section.
+Entered values still pass length, option, link, and image validation. The
+**Save and continue** action requires the current section's required fields.
+Published and archived exhibits retain their full edit validation.
+
+**My exhibits** shows how many of the three sections are ready to publish and
+the last saved date. **Reopen draft** opens the first unfinished section. The
+preview links to incomplete sections and enables publication once the idea,
+current work with a cover, and invitation with permissions are ready. Readiness
+is derived from the saved exhibit and also applies to existing drafts.
+
 Archive hides the public exhibit and its public media. The creator can reopen and republish it unless an administrator has separately restricted it. The first chapter and approved contributions are retained. Edits to a published exhibit appear immediately; its original timeline entry remains a snapshot.
 
 The integration suite tests registration, permissions, draft URL and media isolation, invalid uploads, CSRF, repeated submissions, archive and republish. To hand off an example, run the demo seed and open Campus Guide or Private demo draft as the demo creator.

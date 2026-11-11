@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% from "_components.html" import picture, security, status, date with context %}
+{% from "_components.html" import draft_progress, picture, security, status, date with context %}
 {% set tabs = {'exhibits': 'My exhibits', 'requests': 'Creator requests', 'review': 'Updates awaiting review', 'my-requests': 'My requests', 'continuations': 'My continuations', 'saved': 'Saved exhibits'} %}
 {% macro decision(form_action, second_action, prompt, first, second, key, proposal_version=none) -%}
   <form method="post" class="decision-form" action="{{ form_action }}">
@@ -44,9 +44,13 @@
         {% if item.moderation_hidden %}{{ status('restricted') }}{% endif %}
       </div>
       <h3>{{ item.label }}</h3><p>{{ item.intention }}</p>
+      {% if tab == 'exhibits' and item.publication_state == 'draft' %}
+        {{ draft_progress(item) }}
+        <p class="small muted">Last saved {{ date(item.updated_at) }}</p>
+      {% endif %}
       <div class="actions">
         {% if tab == 'exhibits' %}
-          <a class="button" href="{{ url_for('exhibits.edit', exhibit_id=item.id) }}">{{ 'Reopen draft' if item.publication_state == 'draft' else 'Edit exhibit' }}</a>
+          <a class="button" href="{{ url_for('exhibits.edit', exhibit_id=item.id, step=item.submission_progress.resume_step if item.publication_state == 'draft' else 1) }}">{{ 'Reopen draft' if item.publication_state == 'draft' else 'Edit exhibit' }}</a>
           <a href="{{ url_for('exhibits.preview', exhibit_id=item.id) }}">Preview and publish</a>
           {% if item.publication_state != 'hidden' %}
           <form method="post" action="{{ url_for('exhibits.archive', exhibit_id=item.id) }}">{{ security() }}<button class="text-button">Archive</button></form>
