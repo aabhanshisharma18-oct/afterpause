@@ -25,6 +25,7 @@ def create_app(config=None):
     database = os.getenv("DEMO_DATABASE_URL" if mode == "demo" else "DATABASE_URL")
     app.config.update(
         SECRET_KEY=os.getenv("SECRET_KEY"), APP_ENV=mode,
+        DEMO_LOGIN_ENABLED=os.getenv("DEMO_LOGIN_ENABLED", "1") == "1",
         RATELIMIT_STORAGE_URI=os.getenv("RATELIMIT_STORAGE_URI") or "memory://",
         SQLALCHEMY_DATABASE_URI=database or ("sqlite:///demo.sqlite3" if mode == "demo" else "sqlite:///museum.sqlite3"),
         SQLALCHEMY_TRACK_MODIFICATIONS=False,
@@ -121,6 +122,9 @@ def create_app(config=None):
             return
         user_id = session.get("user_id")
         g.user = db.session.get(User, user_id) if user_id is not None else None
+        if g.user and g.user.sandbox_id and g.user.sandbox_id != session.get("demo_sandbox"):
+            session.clear()
+            g.user = None
 
     app.jinja_env.filters["room_names"] = lambda rooms: {key: room[0] for key, room in rooms.items()}
 

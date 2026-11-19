@@ -127,3 +127,30 @@ def profile():
         flash("Profile updated.", "success")
         return redirect(url_for("auth.profile"), code=303)
     return render_template("profile.html")
+
+
+@bp.post("/demo")
+def demo_login():
+    """Create or resume this browser's demo; never sign into a shared real account."""
+    if not current_app.config["DEMO_LOGIN_ENABLED"]:
+        abort(404)
+    if g.user and not g.user.sandbox_id:
+        return redirect(url_for("exhibits.dashboard"), code=303)
+    sandbox = session.get("demo_sandbox")
+    role = request.form.get("role", "creator")
+    if role not in {"creator", "contributor"}:
+        abort(400)
+    user = None
+    if sandbox:
+        user = db.session.scalar(select(User).where(
+            User.sandbox_id == sandbox, User.email == f"demo-{sandbox}-{role}@afterpause.invalid"))
+    if not user:
+        throttle()
+        from ..showcase import create_workspace
+        sandbox, user = create_workspace()
+    session.clear()
+    session["demo_sandbox"] = sandbox
+    session["user_id"] = user.id
+    session.permanent = True
+    flash("Welcome to your demo workshop. Try publishing, adopting, and posting progress.", "success")
+    return redirect(url_for("exhibits.dashboard"), code=303)

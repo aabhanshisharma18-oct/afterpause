@@ -1,4 +1,5 @@
 from uuid import uuid4
+from datetime import date
 
 from flask import Blueprint, abort, flash, g, redirect, render_template, request, send_file, url_for
 from sqlalchemy import func, select
@@ -23,7 +24,8 @@ def owned(exhibit_id):
 @signed_in
 def create():
     once()
-    exhibit = Exhibit(slug=f"exhibit-{uuid4().hex[:12]}", owner_id=g.user.id)
+    exhibit = Exhibit(slug=f"exhibit-{uuid4().hex[:12]}", owner_id=g.user.id,
+                      sandbox_id=g.user.sandbox_id, is_demo=bool(g.user.sandbox_id))
     db.session.add(exhibit)
     db.session.commit()
     return redirect(url_for(".edit", exhibit_id=exhibit.id), code=303)
@@ -46,6 +48,18 @@ def read_step(exhibit, step, *, partial=False):
             repository_url=external_link("repository_url", "Repository link"),
             demo_url=external_link("demo_url", "Demo link"),
         )
+        for name, label in (("born_on", "Born date"), ("paused_on", "Pause date")):
+            raw = request.form.get(name, "").strip()
+            try:
+                details[name] = date.fromisoformat(raw) if raw else None
+            except ValueError:
+                raise FormError(name, f"Enter a valid {label.lower()}.")
+            if details[name] and details[name] > date.today():
+                raise FormError(name, f"{label} cannot be in the future.")
+        if details["born_on"] and details["paused_on"] and details["paused_on"] < details["born_on"]:
+            raise FormError("paused_on", "The pause date must be on or after the born date.")
+        details["lessons"] = value("lessons", "Lessons learned", 1600, required=False)
+        details["differently"] = value("differently", "What you would do differently", 1600, required=False)
         images = [read_image(), read_image("second_image", "second_alt_text")]
         if len(exhibit.media) + sum(bool(image) for image in images) > 4:
             raise FormError("image", "An exhibit can contain up to four images.")
@@ -158,6 +172,13 @@ def media(storage_key):
             abort(404)
     elif not exhibit.is_public and not can_preview(exhibit):
         abort(404)
+    if item.bundled_asset:
+        from flask import current_app
+        from pathlib import Path
+        # Only the server-side fixture loader can set this value.
+        if item.bundled_asset not in {"campus-guide-reference.png", "reading-room.png", "one-more-level.png", "creative-workspace.png"}:
+            abort(404)
+        return send_file(Path(current_app.static_folder) / "images" / item.bundled_asset, mimetype="image/png")
     from ..storage import read
     path = read(storage_key)
     return send_file(path, mimetype="image/webp", download_name="exhibit-image.webp")
@@ -186,7 +207,8 @@ def dashboard():
             Bookmark.user_id == owner).order_by(Exhibit.id.desc()))
     else:
         abort(404)
-    return render_template("dashboard.html", tab=tab, entries=list(entries))
+    from ..museum.experience import collection_stats
+    return render_template("dashboard.html", tab=tab, entries=list(entries), stats=collection_stats())
 
 
 @bp.post("/exhibits/<int:exhibit_id>/bookmark")

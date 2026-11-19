@@ -10,13 +10,15 @@
       <h1 id="hero-title">Not finished.<br><span>Still worth something.</span></h1>
       <p class="lede">A place for unfinished projects and the people who see what they could become.</p>
       <div class="actions">
-        <a class="button" href="#projects">Explore projects <span aria-hidden="true">↗</span></a>
+        <a class="button" href="{{ url_for('museum.explore') }}">Explore projects <span aria-hidden="true">↗</span></a>
         {{ share_project('Share your project', 'text-button share-link') }}
+        {% if not g.user and config.DEMO_LOGIN_ENABLED %}<form method="post" action="{{ url_for('auth.demo_login') }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="button secondary">Demo sign-in</button></form>{% endif %}
       </div>
     </div>
     <article class="spotlight" aria-labelledby="featured-title">
       {% set featured = projects|first|default(none) %}
       {% set campus_guide = featured and featured.slug == 'demo-campus-guide' %}
+      {% if featured %}<a href="{{ url_for('museum.exhibit', slug=featured.slug) }}" aria-label="Open {{ featured.title }}">{% endif %}
       {% if not featured or campus_guide %}
         <div class="picture">
           <img src="{{ url_for('static', filename='images/campus-guide-reference.png') }}"
@@ -26,6 +28,7 @@
       {% else %}
         {{ picture(featured.media|first|default(none), lazy=false) }}
       {% endif %}
+      {% if featured %}</a>{% endif %}
       <p class="eyebrow">Featured project{% if not featured or featured.is_demo %} · Demo{% endif %}</p>
       <h2 id="featured-title">{% if featured %}<a href="{{ url_for('museum.exhibit', slug=featured.slug) }}">{{ featured.title }}</a>{% else %}Campus Guide{% endif %}</h2>
       <p>{{ 'A better way to find your way around campus.' if not featured or campus_guide else featured.intention }}</p>
@@ -51,7 +54,7 @@
     <div class="card-grid">
       {% for exhibit in projects %}
         <article class="home-card">
-          {{ picture(exhibit.media|first|default(none)) }}
+          <a href="{{ url_for('museum.exhibit', slug=exhibit.slug) }}" aria-label="Open {{ exhibit.title }}">{{ picture(exhibit.media|first|default(none)) }}</a>
           <p class="project-tag">{{ categories[exhibit.category] }}{% if exhibit.is_demo %} · Demo{% endif %}</p>
           <h3>{{ exhibit.title }}</h3>
           <p class="muted">{{ exhibit.next_step }}</p>

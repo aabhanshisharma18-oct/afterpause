@@ -34,6 +34,7 @@
     </nav>
     {% endif %}
   </header>
+  <div class="museum-placard"><div><span>Born</span><strong>{{ exhibit.born_on.strftime('%B %Y') if exhibit.born_on else 'Not recorded' }}</strong></div><div><span>Paused</span><strong>{{ exhibit.paused_on.strftime('%B %Y') if exhibit.paused_on else 'Not recorded' }}</strong></div><div><span>Cause of pause</span><strong>{{ pause_reasons.get(exhibit.pause_reason, 'Not recorded') }}</strong></div></div>
   {{ picture(exhibit.media|first|default(none), lazy=false) }}
   <div class="credit-line"><strong>Original work by {{ exhibit.owner.display_name }}</strong>{% if exhibit.attribution %}<span>{{ exhibit.attribution }}</span>{% endif %}</div>
   <div class="exhibit-columns">
@@ -43,6 +44,7 @@
         {% if exhibit.pause_reason or exhibit.pause_note %}<h3>Why it paused</h3><p class="multiline">{{ pause_reasons.get(exhibit.pause_reason, '') }}{% if exhibit.pause_reason and exhibit.pause_note %} · {% endif %}{{ exhibit.pause_note }}</p>{% endif %}
         {% if exhibit.media|length > 1 %}<div class="media-strip">{% for image in exhibit.media[1:] %}{{ picture(image) }}{% endfor %}</div>{% endif %}
       </section>
+      <section class="autopsy"><p class="eyebrow">The autopsy report</p><h2>What this project taught us</h2><h3>What went wrong</h3><p>{{ exhibit.pause_note or 'The creator has not added this part of the story yet.' }}</p><h3>What was learned</h3><p>{{ exhibit.lessons or 'Lessons are still being collected.' }}</p><h3>What I would do differently</h3><p>{{ exhibit.differently or 'A fresh perspective is welcome.' }}</p></section>
       <section>
         <h2>Materials and permissions</h2>
         <p>{{ permissions.get(exhibit.permissions, 'Reuse terms are not yet selected.') }}</p>
@@ -51,6 +53,8 @@
           {% if exhibit.repository_url %}<li><a href="{{ exhibit.repository_url }}" rel="nofollow ugc noopener">Original repository ↗</a></li>{% endif %}
           {% if exhibit.demo_url %}<li><a href="{{ exhibit.demo_url }}" rel="nofollow ugc noopener">Original demo ↗</a></li>{% endif %}
         </ul>{% endif %}
+        {% if not preview and exhibit.repository_url %}<div class="metadata-panel" data-metadata-panel><h3>Final words from GitHub</h3><p class="small muted">Fetch stars, archive status, and the latest commit. A latest commit is not proof that development has stopped.</p><button type="button" class="button secondary" data-metadata-url="{{ url_for('museum.external_metadata', slug=exhibit.slug, kind='github') }}">Check GitHub activity</button><p role="status" class="small multiline"></p></div>{% endif %}
+        {% if not preview and exhibit.demo_url %}<div class="metadata-panel" data-metadata-panel><h3>Dead or alive?</h3><p class="small muted">Check whether the supplied demo link responds right now.</p><button type="button" class="button secondary" data-metadata-url="{{ url_for('museum.external_metadata', slug=exhibit.slug, kind='demo') }}">Check demo link</button><p role="status" class="small"></p></div>{% endif %}
       </section>
     </div>
     <aside class="invitation" id="invitation" aria-labelledby="invitation-title">
@@ -79,7 +83,7 @@
             <p class="small muted">Share a screenshot and a short update for the creator to review.</p>
             <a class="button" href="{{ url_for('continuations.submit_update', continuation_id=own_proposal.continuation.id) }}">Submit progress</a>
           {% elif exhibit.continuation_state != 'in-progress' %}
-            <a class="button" href="{{ url_for('continuations.request_continuation', exhibit_id=exhibit.id) }}">Continue this idea</a>
+            <a class="button" href="{{ url_for('continuations.request_continuation', exhibit_id=exhibit.id) }}">Adopt / resurrect</a>
             <p class="small muted">Send a proposal to the creator. The original work stays theirs.</p>
           {% else %}
             <p class="muted">A contributor is working on the next chapter.</p>
@@ -120,5 +124,11 @@
   </details>
   {% endif %}
   {% include "_timeline.html" %}
+  {% if not preview %}
+  <section class="guest-book" id="guest-book"><div class="split-heading"><div><p class="eyebrow">Leave a little encouragement</p><h2>The guest book</h2></div>
+  {% if g.user %}<form method="post" action="{{ url_for('museum.flowers', exhibit_id=exhibit.id) }}">{{ security() }}<button class="button secondary"{% if flowered %} disabled{% endif %}>✿ {{ flowers }} · {{ 'Flower placed' if flowered else 'Pay respects' }}</button></form>{% else %}<a href="{{ url_for('auth.login') }}">✿ {{ flowers }} · Sign in to leave a flower</a>{% endif %}</div>
+  {% if g.user %}<form class="form-panel" method="post" action="{{ url_for('museum.guest_book', exhibit_id=exhibit.id) }}">{{ security() }}<label for="guest-note">A note for the next chapter</label><textarea id="guest-note" name="body" maxlength="600" rows="3" required placeholder="What would you love to see this become?"></textarea><button class="button">Leave a note</button></form>{% else %}<p><a href="{{ url_for('auth.login') }}">Sign in or try the demo</a> to leave a note.</p>{% endif %}
+  {% for note in notes %}<article class="guest-note"><p>{{ note.body }}</p><p class="small muted">{{ note.author.display_name }} · {{ date(note.created_at) }}</p>{% if g.user and (g.user.id in [note.author_id, exhibit.owner_id] or g.user.role == 'admin') %}<form method="post" action="{{ url_for('museum.delete_guest_entry', entry_id=note.id) }}">{{ security() }}<button class="text-button small">Remove note</button></form>{% endif %}</article>{% else %}<p class="muted">Be the first to leave a little encouragement.</p>{% endfor %}</section>
+  {% endif %}
 </article>
 {% endblock %}

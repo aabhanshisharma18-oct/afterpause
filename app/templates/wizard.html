@@ -30,6 +30,10 @@
       {{ field('current_work', 'What exists', exhibit.current_work, 1600, 'textarea', error=error) }}
       {{ field('pause_reason', 'Pause reason', exhibit.pause_reason, type='select', choices=pause_reasons, required=false, error=error) }}
       {{ field('pause_note', 'Anything else about the pause', exhibit.pause_note, 600, 'textarea', required=false, error=error, help='Share only what you’re comfortable sharing.') }}
+      {{ field('born_on', 'Born date', exhibit.born_on.isoformat() if exhibit.born_on else '', type='date', required=false, error=error) }}
+      {{ field('paused_on', 'Pause date', exhibit.paused_on.isoformat() if exhibit.paused_on else '', type='date', required=false, error=error) }}
+      {{ field('lessons', 'What was learned', exhibit.lessons, 1600, 'textarea', required=false, error=error) }}
+      {{ field('differently', 'What I would do differently', exhibit.differently, 1600, 'textarea', required=false, error=error) }}
       {{ field('repository_url', 'Original repository URL', exhibit.repository_url, 500, 'url', required=false, error=error) }}
       {{ field('demo_url', 'External demo URL', exhibit.demo_url, 500, 'url', required=false, error=error) }}
       {% if exhibit.media %}<div class="media-strip">{% for image in exhibit.media %}{{ picture(image) }}{% endfor %}</div>{% endif %}

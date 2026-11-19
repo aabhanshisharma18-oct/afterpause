@@ -48,3 +48,13 @@ def seed_demo(password):
 def register_commands(app):
     app.cli.add_command(make_admin)
     app.cli.add_command(seed_demo)
+    app.cli.add_command(seed_gallery_command)
+
+
+@click.command("seed-gallery")
+@with_appcontext
+def seed_gallery_command():
+    """Add labelled, bundled exhibits without needing image-storage credentials."""
+    from .showcase import seed_gallery
+    seed_gallery()
+    click.echo("Museum sample collection ready.")

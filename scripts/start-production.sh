@@ -12,4 +12,7 @@ test -w "$UPLOAD_DIR" || { echo "UPLOAD_DIR is not writable" >&2; exit 1; }
 if [ "${RUN_MIGRATIONS:-1}" = "1" ]; then
     python -m flask --app app db upgrade
 fi
+if [ "${SEED_GALLERY:-1}" = "1" ]; then
+    python -m flask --app app seed-gallery
+fi
 exec gunicorn --bind "0.0.0.0:${PORT:-8000}" --workers "${WEB_CONCURRENCY:-2}" --timeout 60 --access-logfile - --error-logfile - 'app:create_app()'

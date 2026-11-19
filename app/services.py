@@ -8,7 +8,7 @@ from urllib.parse import urlsplit
 from uuid import uuid4
 import warnings
 
-from flask import abort, current_app, g, redirect, request, url_for
+from flask import abort, current_app, g, redirect, request, session, url_for
 from PIL import Image, ImageOps, UnidentifiedImageError
 from sqlalchemy import select, text
 
@@ -82,8 +82,10 @@ def exhibit_for_write(exhibit_id, *, owner=False, public=False):
     if db.engine.dialect.name == "sqlite":
         db.session.execute(text("BEGIN IMMEDIATE"))
     exhibit = db.session.scalar(select(Exhibit).where(Exhibit.id == exhibit_id).with_for_update())
-    if exhibit is None or (public and not exhibit.is_public):
+    if exhibit is None or (exhibit.sandbox_id and exhibit.sandbox_id != session.get("demo_sandbox")) or (public and not exhibit.is_public):
         abort(404)
+    if g.user and g.user.sandbox_id and exhibit.sandbox_id != g.user.sandbox_id:
+        abort(409, "Open one of your demo workspace exhibits from the dashboard to try this action.")
     if owner and exhibit.owner_id != g.user.id:
         abort(403)
     return exhibit
@@ -99,7 +101,10 @@ def once():
 
 
 def visible_exhibits():
-    return select(Exhibit).where(Exhibit.publication_state == "published", Exhibit.moderation_hidden.is_(False))
+    scope = Exhibit.sandbox_id.is_(None)
+    if session.get("demo_sandbox"):
+        scope = Exhibit.sandbox_id == session["demo_sandbox"]
+    return select(Exhibit).where(Exhibit.publication_state == "published", Exhibit.moderation_hidden.is_(False), scope)
 
 
 def can_preview(exhibit):

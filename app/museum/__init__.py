@@ -2,7 +2,7 @@ from flask import Blueprint, abort, g, render_template, request, url_for
 from sqlalchemy import or_, select
 from sqlalchemy.orm import joinedload, selectinload
 
-from ..models import Bookmark, CATEGORIES, Exhibit, Proposal, ROOMS, STATES, Tag, TimelineEvent, db
+from ..models import Bookmark, CATEGORIES, Exhibit, Flower, GuestEntry, PAUSE_REASONS, Proposal, ROOMS, STATES, Tag, TimelineEvent, db
 from ..services import pagination_number, visible_exhibits
 
 bp = Blueprint("museum", __name__)
@@ -18,8 +18,8 @@ def entrance():
 @bp.get("/explore")
 def explore():
     filters = {key: request.args.get(key, "").strip()[:limit] for key, limit in
-               (("q", 100), ("room", 40), ("category", 16), ("skill", 60), ("state", 16))}
-    for key, allowed in (("room", ROOMS), ("category", CATEGORIES), ("state", STATES)):
+               (("q", 100), ("room", 40), ("category", 16), ("skill", 60), ("state", 16), ("cause", 16))}
+    for key, allowed in (("room", ROOMS), ("category", CATEGORIES), ("state", STATES), ("cause", PAUSE_REASONS)):
         if filters[key] and filters[key] not in allowed:
             abort(400, "Choose a valid filter.")
     query = visible_exhibits().options(joinedload(Exhibit.owner), selectinload(Exhibit.media))
@@ -31,7 +31,7 @@ def explore():
     if skill := filters["skill"]:
         query = query.where(Exhibit.skills.icontains(skill, autoescape=True))
     for key, column in (("room", Exhibit.room_id), ("category", Exhibit.category),
-                        ("state", Exhibit.continuation_state)):
+                        ("state", Exhibit.continuation_state), ("cause", Exhibit.pause_reason)):
         if filters[key]:
             query = query.where(column == filters[key])
     page = db.paginate(query.order_by(Exhibit.published_at.desc(), Exhibit.id.desc()),
@@ -64,7 +64,13 @@ def detail(exhibit, *, preview=False):
                                          .options(joinedload(Proposal.continuation))
                                          .where(Proposal.exhibit_id == exhibit.id, Proposal.applicant_id == g.user.id)
                                          .order_by(Proposal.id.desc()).limit(1))
+    from sqlalchemy import func
+    flowers = db.session.scalar(select(func.count()).select_from(Flower).where(Flower.exhibit_id == exhibit.id))
+    flowered = bool(g.user and db.session.get(Flower, (g.user.id, exhibit.id)))
+    notes = db.session.scalars(select(GuestEntry).where(GuestEntry.exhibit_id == exhibit.id)
+                              .order_by(GuestEntry.id.desc()).limit(30)).all()
     return render_template("exhibit.html", exhibit=exhibit, preview=preview, events=events,
+                           flowers=flowers, flowered=flowered, notes=notes,
                            saved=saved, comparison=comparison, own_proposal=own_proposal)
 
 
@@ -87,3 +93,7 @@ def ticket(slug):
     if not item:
         abort(404)
     return render_template("ticket.html", exhibit=item, share_url=url_for(".exhibit", slug=slug, _external=True))
+
+# Register collection and visitor-interaction routes after defining the blueprint.
+from . import experience  # noqa: E402, F401
+from . import integrations  # noqa: E402, F401

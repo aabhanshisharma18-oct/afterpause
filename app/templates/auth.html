@@ -7,6 +7,11 @@
   <p class="eyebrow">The museum workshop</p>
   <h1>{{ 'Join the museum' if joining else 'Sign in' }}</h1>
   <p class="muted">{{ 'Create an account to exhibit work, save projects, or propose a continuation.' if joining else 'Pick up your drafts, proposals, and continuations.' }}</p>
+  {% if config.DEMO_LOGIN_ENABLED %}
+  <div class="demo-entry"><p class="eyebrow">Take a look around</p><h2>Your next chapter starts here.</h2><p>Open a populated dashboard, publish a sample draft, adopt an idea, and leave a progress update. No account or password needed.</p><form method="post" action="{{ url_for('auth.demo_login') }}">{{ security(false) }}<button class="button">Demo sign-in — open dashboard</button></form></div>
+  {% endif %}
+  {% if error %}<p class="notice error" role="alert">{{ error }}</p>{% endif %}
+  <p class="eyebrow">{{ 'Create your own account' if joining else 'Or sign in to your account' }}</p>
   <form method="post" class="form-panel">
     {{ security(false) }}
     {% if joining %}{{ field('display_name', 'Display name', limit=70, error=error, autocomplete='nickname', help='This is the name shown with your work.') }}{% endif %}

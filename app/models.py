@@ -21,11 +21,13 @@ ROOMS = {
     "useful-little-tools": ("Useful Little Tools", "Small projects that make everyday work easier."),
     "first-experiments": ("First Experiments", "Early ideas with room to grow."),
 }
-CATEGORIES = {"design": "Design", "software": "Software", "games": "Games", "other": "Other"}
+CATEGORIES = {"design": "Design", "software": "Web apps & tools", "games": "Games", "ai": "AI", "hardware": "Hardware", "startups": "Startups", "other": "Other"}
 STATES = {"open": "Open", "in-progress": "In progress", "milestone": "Milestone reached"}
 PERMISSIONS = {"ask": "Ask the creator before reuse", "mit": "MIT", "cc-by": "CC BY 4.0", "cc0": "CC0 1.0"}
 PAUSE_REASONS = {"time": "Time constraints", "learning": "Learning curve",
-                 "priorities": "Changed priorities", "other": "Other"}
+                 "priorities": "Changed priorities", "scope": "Scope creep", "interest": "Lost interest",
+                 "alternative": "A better alternative appeared", "funding": "Ran out of money",
+                 "burnout": "Burnout", "job": "Got a job", "other": "Other"}
 
 
 def utcnow():
@@ -44,6 +46,7 @@ class User(Record, db.Model):
     display_name = db.Column(db.String(70), nullable=False)
     password_hash = db.Column(db.String(255), nullable=False)
     role = db.Column(db.String(12), nullable=False, default="member")
+    sandbox_id = db.Column(db.String(32), nullable=True, index=True)
 
 
 class Room(db.Model):
@@ -67,6 +70,12 @@ class Tag(Record, db.Model):
 
 class Exhibit(Record, db.Model):
     __tablename__ = "exhibits"
+    sandbox_id = db.Column(db.String(32), nullable=True, index=True)
+    born_on = db.Column(db.Date, nullable=True)
+    paused_on = db.Column(db.Date, nullable=True)
+    lessons = db.Column(db.Text, default="", nullable=False)
+    differently = db.Column(db.Text, default="", nullable=False)
+    curator_pick = db.Column(db.Boolean, default=False, nullable=False)
     slug = db.Column(db.String(125), nullable=False, unique=True)
     owner_id = db.Column(db.ForeignKey("users.id"), nullable=False, index=True)
     room_id = db.Column(db.ForeignKey("rooms.slug"), nullable=True, index=True)
@@ -98,7 +107,9 @@ class Exhibit(Record, db.Model):
 
     @property
     def is_public(self):
-        return self.publication_state == "published" and not self.moderation_hidden
+        from flask import has_request_context, session
+        in_scope = not self.sandbox_id or (has_request_context() and session.get("demo_sandbox") == self.sandbox_id)
+        return self.publication_state == "published" and not self.moderation_hidden and in_scope
 
     @property
     def label(self):
@@ -186,6 +197,7 @@ class Media(Record, db.Model):
     __tablename__ = "media"
     exhibit_id = db.Column(db.ForeignKey("exhibits.id"), nullable=True, index=True)
     update_id = db.Column(db.ForeignKey("updates.id"), nullable=True, unique=True)
+    bundled_asset = db.Column(db.String(100), nullable=True)
     storage_key = db.Column(db.String(37), nullable=False, unique=True)
     alt_text = db.Column(db.String(180), nullable=False)
     mime_type = db.Column(db.String(30), default="image/webp", nullable=False)
@@ -244,3 +256,18 @@ class Action(db.Model):
     user_id = db.Column(db.ForeignKey("users.id"), primary_key=True)
     token = db.Column(db.String(32), primary_key=True)
     created_at = db.Column(db.DateTime, default=utcnow, nullable=False)
+
+
+class Flower(db.Model):
+    __tablename__ = "flowers"
+    user_id = db.Column(db.ForeignKey("users.id"), primary_key=True)
+    exhibit_id = db.Column(db.ForeignKey("exhibits.id"), primary_key=True)
+    created_at = db.Column(db.DateTime, default=utcnow, nullable=False)
+
+
+class GuestEntry(Record, db.Model):
+    __tablename__ = "guest_entries"
+    exhibit_id = db.Column(db.ForeignKey("exhibits.id"), nullable=False, index=True)
+    author_id = db.Column(db.ForeignKey("users.id"), nullable=False)
+    body = db.Column(db.String(600), nullable=False)
+    author = db.relationship(User)

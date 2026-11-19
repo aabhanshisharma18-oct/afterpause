@@ -85,3 +85,34 @@ The original static concept is preserved under `prototype/`. Its sample features
 See [production deployment](docs/deployment.md) for the Docker startup, persistent uploads, MySQL/Redis configuration, health checks and release steps.
 
 For a free demo using PostgreSQL and private cloud images, see [Render + Supabase setup](docs/free-deployment.md). Redis-compatible shared limits are supplied by Render Free Key Value.
+
+## One-click presentation demo
+
+Use **Try demo** in the navigation, or **Demo sign-in — open dashboard** on the
+sign-in page. There is no demo password. Each browser gets a separate workspace
+with two member accounts, five published fictional exhibits, and a ready-to-publish
+BorrowBox draft. The banner switches between creator and contributor so you can
+accept the Campus Guide proposal, post a screenshot update, then approve it as the
+creator. Demo visitors cannot view another visitor's workspace or moderate real
+accounts. Sign out before using a personal account.
+
+`DEMO_LOGIN_ENABLED=0` hides and disables new demo entry. Keep `SECRET_KEY` stable
+across deploys and workers to retain signed sessions. Demo workspaces are ordinary
+database records; they survive app restarts but are excluded from the public
+collection. They are not automatically deleted. Free hosting still needs a working
+database connection for demo entry.
+
+Production startup runs the idempotent `flask --app app seed-gallery` command by
+default. It adds six labelled sample exhibits backed by bundled images, without
+requiring cloud image uploads or overwriting any user projects or passwords.
+Set `SEED_GALLERY=0` to disable this step, or run the command manually locally.
+
+The collection includes category wings, curator selections, cause-of-pause filters,
+dated placards, creator-written autopsy notes, a guest book with removal controls,
+and one flower per signed-in visitor per exhibit. Statistics and the pause timeline
+use visible exhibits and explicitly identify synthetic examples. The gift shop is
+satirical, with links into the museum and no payments. GitHub metadata and public
+demo-link checks are requested on demand and cached for up to 15 minutes; unavailable
+external services display an error without breaking the exhibit. Link checks reject
+private addresses, pin the validated public IP, and never follow redirects. The
+optional AI eulogy generator is not implemented.

@@ -51,3 +51,14 @@ collection or transfer files into the private bucket with matching storage keys
 before switching an existing database. Do not run backup.sh/restore.sh against
 PostgreSQL: those scripts are MySQL-specific. Use PostgreSQL pg_dump/pg_restore
 and separately export the private media bucket for recovery.
+
+## Updating the presentation demo
+
+Deploy the current `main` commit with the existing Docker start command. Startup
+runs database migrations and adds the bundled sample collection before Gunicorn.
+No new Supabase bucket policies or secrets are needed. `DEMO_LOGIN_ENABLED` and
+`SEED_GALLERY` both default to `1`; set them to `0` to disable the corresponding
+feature. On the updated site, select **Try demo** to go straight to a populated
+dashboard. The creator/contributor switch is limited to that browser's own demo
+accounts; it never grants administrator access. Verify `/readyz`, demo entry,
+role switching, a draft publication, and an approved progress update after deploy.

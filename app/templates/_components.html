@@ -57,7 +57,7 @@
 
 {% macro exhibit_card(exhibit) -%}
   <article class="card">
-    {{ picture(exhibit.media|first|default(none)) }}
+    <a href="{{ url_for('museum.exhibit', slug=exhibit.slug) }}" aria-label="Open {{ exhibit.title }}">{{ picture(exhibit.media|first|default(none)) }}</a>
     <div class="card-body">
       <div class="card-meta">
         <span class="eyebrow">No. {{ '%03d'|format(exhibit.id) }}</span>
@@ -66,6 +66,8 @@
       </div>
       <h2><a href="{{ url_for('museum.exhibit', slug=exhibit.slug) }}">{{ exhibit.title }}</a></h2>
       <p>{{ exhibit.intention }}</p>
+      {% if exhibit.pause_reason %}<a class="cause-tag" href="{{ url_for('museum.explore', cause=exhibit.pause_reason) }}">{{ pause_reasons.get(exhibit.pause_reason) }}</a>{% endif %}
+      {% if exhibit.born_on and exhibit.paused_on %}<p class="small muted">{{ exhibit.born_on.strftime('%b %Y') }} – {{ exhibit.paused_on.strftime('%b %Y') }}</p>{% endif %}
       <p class="muted small">Original work by {{ exhibit.owner.display_name }}</p>
       <p class="next-note"><strong>Next step</strong> {{ exhibit.next_step }}</p>
     </div>

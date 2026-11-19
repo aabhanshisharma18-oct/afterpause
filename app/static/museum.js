@@ -159,3 +159,24 @@ if (copyButton && navigator.clipboard) {
     }
   });
 }
+
+for (const panel of document.querySelectorAll('[data-metadata-panel]')) {
+  const button = panel.querySelector('button');
+  const output = panel.querySelector('[role=status]');
+  button.addEventListener('click', async () => {
+    button.disabled = true;
+    output.textContent = 'Checking…';
+    try {
+      const response = await fetch(button.dataset.metadataUrl);
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'The service is temporarily unavailable.');
+      output.textContent = data.final_words !== undefined
+        ? `${data.stars} stars · ${data.archived ? 'Archived' : 'Not archived'} · Last commit: ${data.last_commit || 'Unknown'}\n${data.label}\n“${data.final_words}”`
+        : `${data.result} (HTTP ${data.status}). ${data.detail}`;
+    } catch (error) {
+      output.textContent = error.message || 'Could not check the link. Try opening it directly.';
+    } finally {
+      button.disabled = false;
+    }
+  });
+}
