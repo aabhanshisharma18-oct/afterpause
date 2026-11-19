@@ -70,8 +70,14 @@ def test_flowers_guestbook_and_delete_permissions(app):
 
 def test_bundled_collection_is_idempotent_and_navigation_works(app):
     with app.app_context():
+        from werkzeug.security import generate_password_hash
+        db.session.add(User(email="collection@afterpause.invalid", display_name="Existing member",
+                            password_hash=generate_password_hash("test-account-only")))
+        db.session.commit()
         seed_gallery()
         seed_gallery()
+        owner = db.session.scalar(select(User).where(User.role == "collection"))
+        assert owner.email != "collection@afterpause.invalid"
         assert db.session.scalar(select(func.count()).select_from(Exhibit)) == 6
         assert db.session.scalar(select(func.count()).select_from(Media)) == 6
     client = app.test_client()

@@ -70,9 +70,9 @@ def specimen(owner, index, prefix, sandbox_id=None, *, draft=False):
 def seed_gallery():
     """Idempotent startup fixture loader; never modifies user work or passwords."""
     ensure_rooms()
-    owner = db.session.scalar(select(User).where(User.email == "collection@afterpause.invalid"))
+    owner = db.session.scalar(select(User).where(User.role == "collection").order_by(User.id).limit(1))
     if not owner:
-        owner = User(email="collection@afterpause.invalid", display_name="Museum Collection",
+        owner = User(email=f"collection-{uuid4().hex}@afterpause.invalid", display_name="Museum Collection", role="collection",
                      password_hash=generate_password_hash(token_hex(32)))
         db.session.add(owner)
     for index in range(len(SAMPLES)):
