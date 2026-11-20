@@ -141,13 +141,16 @@ def demo_login():
     if role not in {"creator", "contributor"}:
         abort(400)
     user = None
-    if sandbox:
+    if sandbox and request.form.get("restart") != "yes":
         user = db.session.scalar(select(User).where(
             User.sandbox_id == sandbox, User.email == f"demo-{sandbox}-{role}@afterpause.invalid"))
     if not user:
         throttle()
         from ..showcase import create_workspace
         sandbox, user = create_workspace()
+        if role == "contributor":
+            user = db.session.scalar(select(User).where(
+                User.sandbox_id == sandbox, User.email == f"demo-{sandbox}-contributor@afterpause.invalid"))
     session.clear()
     session["demo_sandbox"] = sandbox
     session["user_id"] = user.id

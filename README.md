@@ -91,9 +91,9 @@ For a free demo using PostgreSQL and private cloud images, see [Render + Supabas
 Use **Try demo** in the navigation, or **Demo sign-in — open dashboard** on the
 sign-in page. There is no demo password. Each browser gets a separate workspace
 with two member accounts, five published fictional exhibits, and a ready-to-publish
-BorrowBox draft. The banner switches between creator and contributor so you can
+BorrowBox draft. Both sample proposals start pending. The banner switches between creator and contributor so you can
 accept the Campus Guide proposal, post a screenshot update, then approve it as the
-creator. Demo visitors cannot view another visitor's workspace or moderate real
+creator. **Restart demo** creates fresh samples with Accept/Decline decisions available again, keeping your current demo role. Earlier workspaces are preserved. Demo visitors cannot view another visitor's workspace or moderate real
 accounts. Sign out before using a personal account.
 
 `DEMO_LOGIN_ENABLED=0` hides and disables new demo entry. Keep `SECRET_KEY` stable

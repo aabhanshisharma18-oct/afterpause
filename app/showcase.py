@@ -6,8 +6,7 @@ from uuid import uuid4
 from sqlalchemy import select
 from werkzeug.security import generate_password_hash
 
-from .models import (Continuation, Exhibit, GuestEntry, Media, Proposal, Room, ROOMS,
-                     Update, User, db, utcnow)
+from .models import Exhibit, GuestEntry, Media, Proposal, Room, ROOMS, User, db, utcnow
 from .services import add_event
 
 SAMPLES = (
@@ -102,19 +101,12 @@ def create_workspace():
     pending = Proposal(exhibit=own, applicant=contributor,
                        proposal="I would like to make the campus map usable on a phone.",
                        milestone="Build the mobile route panel", materials="The supplied map mockup; ask before reuse")
-    adopted = Proposal(exhibit=reading, applicant=creator, status="accepted", pending_slot=db.null(),
-                       proposal="Add book search and test keyboard navigation.", milestone="A working search concept",
-                       materials="The supplied bookshelf mockup")
-    continuation = Continuation(exhibit=reading, request=adopted, contributor=creator)
-    update = Update(continuation=continuation, author=creator, title="Search has a new home",
-                    body="Added a search field above the bookshelf. The next step is the empty state.",
-                    next_step="Test an empty search result.", review_status="approved",
-                    reviewed_by=contributor.id, reviewed_at=utcnow())
-    reading.continuation_state = "in-progress"
-    db.session.add_all([pending, adopted, continuation, update])
+    reading_request = Proposal(exhibit=reading, applicant=creator,
+                               proposal="Add book search and test keyboard navigation.",
+                               milestone="A working search concept",
+                               materials="The supplied bookshelf mockup")
+    db.session.add_all([pending, reading_request])
     db.session.add(GuestEntry(exhibit_id=game.id, author_id=creator.id,
                              body="This world deserves one more level. The smaller first milestone feels achievable."))
-    add_event(reading, creator, "accepted", "A resurrection begins", body=adopted.proposal)
-    add_event(reading, creator, "update", update.title, body=update.body, next_step=update.next_step, update=update)
     db.session.commit()
     return sandbox, creator

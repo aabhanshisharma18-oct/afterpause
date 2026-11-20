@@ -149,3 +149,36 @@ def test_github_metadata_visible_scope_errors_and_success(app, monkeypatch):
     monkeypatch.setattr(integrations, "github_metadata", lambda *a: {"stars": 3, "archived": True, "final_words": "done"})
     assert client.get(f"/exhibits/{slug}/metadata/github").json["stars"] == 3
     assert app.test_client().get(f"/exhibits/{slug}/metadata/github").status_code == 404
+
+
+def test_reading_room_starts_pending_and_restart_keeps_owner_role(app):
+    from app.models import Continuation, TimelineEvent
+    client = demo(app)
+    assert post(client, "/auth/demo", {"role": "contributor"}).status_code == 303
+    with client.session_transaction() as session:
+        old_sandbox = session["demo_sandbox"]
+    with app.app_context():
+        proposal = db.session.scalar(select(Proposal).join(Exhibit).where(
+            Exhibit.sandbox_id == old_sandbox, Exhibit.title == "Reading Room"))
+        assert proposal.status == "pending" and proposal.continuation is None
+        assert proposal.exhibit.continuation_state == "open"
+        assert db.session.scalar(select(func.count()).select_from(TimelineEvent).where(
+            TimelineEvent.exhibit_id == proposal.exhibit_id)) == 1
+        proposal_id, version = proposal.id, proposal.review_key
+    page = client.get("/dashboard?tab=requests")
+    assert b"Accept proposal" in page.data and b"Decline proposal" in page.data
+    assert post(client, f"/requests/{proposal_id}/accept", {"proposal_version": version}).status_code == 303
+    assert b"Restart demo with pending proposals" in client.get("/dashboard?tab=requests").data
+    assert post(client, "/auth/demo", {"role": "contributor", "restart": "yes"}).status_code == 303
+    with client.session_transaction() as session:
+        assert session["demo_sandbox"] != old_sandbox
+        new_sandbox, user_id = session["demo_sandbox"], session["user_id"]
+    with app.app_context():
+        assert db.session.get(User, user_id).email.endswith("-contributor@afterpause.invalid")
+        old_proposal = db.session.get(Proposal, proposal_id)
+        assert old_proposal.status == "accepted" and old_proposal.continuation.status == "active"
+        fresh = db.session.scalar(select(Proposal).join(Exhibit).where(
+            Exhibit.sandbox_id == new_sandbox, Exhibit.title == "Reading Room"))
+        assert fresh.status == "pending" and fresh.continuation is None
+    assert b"Accept proposal" in client.get("/dashboard?tab=requests").data
+    assert client.post("/auth/demo", data={"restart": "yes"}).status_code == 400

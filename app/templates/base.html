@@ -51,7 +51,9 @@
   {% endwith %}
   {% if session.get('demo_sandbox') and g.user %}
   <aside class="demo-banner"><div class="shell actions"><span><strong>Demo workspace</strong> · {{ g.user.display_name }}</span><span class="small">Fictional projects. Your own space to try everything.</span>
-  <form method="post" action="{{ url_for('auth.demo_login') }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="role" value="{{ 'creator' if g.user.email.endswith('-contributor@afterpause.invalid') else 'contributor' }}"><button class="text-button">Switch to {{ 'creator' if g.user.email.endswith('-contributor@afterpause.invalid') else 'contributor' }}</button></form></div></aside>
+  <form method="post" action="{{ url_for('auth.demo_login') }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="role" value="{{ 'creator' if g.user.email.endswith('-contributor@afterpause.invalid') else 'contributor' }}"><button class="text-button">Switch to {{ 'creator' if g.user.email.endswith('-contributor@afterpause.invalid') else 'contributor' }}</button></form>
+  {% if config.DEMO_LOGIN_ENABLED %}<form method="post" action="{{ url_for('auth.demo_login') }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="restart" value="yes"><input type="hidden" name="role" value="{{ 'contributor' if g.user.email.endswith('-contributor@afterpause.invalid') else 'creator' }}"><button class="text-button">Restart demo</button></form>{% endif %}
+  </div></aside>
   {% endif %}
   <main id="main" tabindex="-1">{% block content %}{% endblock %}</main>
   <footer class="site-footer">

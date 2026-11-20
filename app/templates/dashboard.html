@@ -24,7 +24,7 @@
     <a class="stat-card" href="{{ url_for('exhibits.dashboard', tab='continuations') }}"><strong>{{ stats.reviving }}</strong><span>Ideas being revived</span></a>
     <a class="stat-card" href="{{ url_for('museum.statistics') }}"><strong>{{ stats.average if stats.average is not none else '—' }}</strong><span>Average lifespan · days</span></a>
   </div>
-  {% if session.get('demo_sandbox') %}<div class="demo-guide"><p class="eyebrow">A quick tour</p><div class="tour-grid"><a href="{{ url_for('exhibits.dashboard', tab='exhibits') }}"><strong>Publish BorrowBox</strong><span>Open the ready-made private draft below.</span></a><a href="{{ url_for('exhibits.dashboard', tab='requests') }}"><strong>Review an adoption</strong><span>Accept the mobile-map proposal.</span></a><a href="{{ url_for('exhibits.dashboard', tab='continuations') }}"><strong>Post progress</strong><span>Continue the Reading Room resurrection.</span></a></div></div>{% endif %}
+  {% if session.get('demo_sandbox') %}<div class="demo-guide"><p class="eyebrow">A quick tour</p><div class="tour-grid"><a href="{{ url_for('exhibits.dashboard', tab='exhibits') }}"><strong>Publish BorrowBox</strong><span>Open the ready-made private draft below.</span></a><a href="{{ url_for('exhibits.dashboard', tab='requests') }}"><strong>Review an adoption</strong><span>Accept the mobile-map proposal.</span></a><a href="{{ url_for('exhibits.dashboard', tab='continuations') }}"><strong>Post progress</strong><span>Share an update after a proposal is accepted.</span></a></div></div>{% endif %}
   <nav class="tabs" aria-label="Dashboard sections">
     {% for key, label in tabs.items() %}
     <a href="{{ url_for('exhibits.dashboard', tab=key) }}"{% if key == tab %} aria-current="page"{% endif %}>{{ label }}</a>
@@ -85,6 +85,9 @@
           {% if item.exhibit.is_public %}<a class="button" href="{{ url_for('continuations.edit_request', proposal_id=item.id) }}">Edit proposal</a>{% endif %}
           <form method="post" action="{{ url_for('continuations.withdraw_request', proposal_id=item.id) }}">{{ security() }}<button class="button secondary">Withdraw request</button></form>
         </div>
+      {% endif %}
+      {% if tab == 'requests' and item.status == 'accepted' and g.user.sandbox_id %}
+        <form method="post" class="decision-form" action="{{ url_for('auth.demo_login') }}">{{ security(false) }}<input type="hidden" name="restart" value="yes"><input type="hidden" name="role" value="{{ 'contributor' if g.user.email.endswith('-contributor@afterpause.invalid') else 'creator' }}"><p class="small muted">Rehearse the approval step again with fresh sample proposals.</p><button class="button secondary">Restart demo with pending proposals</button></form>
       {% endif %}
       {% if tab == 'requests' and item.continuation and item.continuation.status == 'active' %}
         <details><summary>Manage active continuation</summary>
